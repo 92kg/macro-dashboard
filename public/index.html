@@ -60,9 +60,9 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">Macro Daily Dashboard</h1>
-            <span class="px-2 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">v2.0 Pro</span>
+            <span class="px-2 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">v2.1 Precision</span>
           </div>
-          <p class="text-xs md:text-sm text-slate-400 mt-0.5">Macro Liquidity · Traditional Risk · Crypto Capital Flow · BTC Regime</p>
+          <p class="text-xs md:text-sm text-slate-400 mt-0.5">Daily Macro Regime · Liquidity · Traditional Risk · Rates · Crypto Capital Flow</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@
       </div>
     </header>
 
-    <!-- 10-SECOND EXECUTIVE DIAGNOSTIC STRIP (Section 23 Acceptance Criteria) -->
+    <!-- 10-SECOND EXECUTIVE DIAGNOSTIC STRIP -->
     <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 shadow-lg">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
@@ -106,7 +106,9 @@
           </span>
           <span class="text-[11px] text-slate-500 font-mono hidden sm:inline">Click any pill to inspect underlying metric</span>
         </div>
-        <span class="text-[10px] font-mono text-slate-500">All 10 Questions Answered</span>
+        <span class="text-[10px] font-mono text-slate-400 cursor-pointer hover:text-cyan-400 transition" onclick="toggleDataQualityModal(true)" id="dq-header-status">
+          Live Data Quality Monitor
+        </span>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs font-mono" id="executive-strip">
@@ -122,10 +124,10 @@
         <div>
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-white tracking-wide uppercase">Macro Regime State</span>
-              <span class="text-[11px] text-slate-500 font-mono">Structural Diagnostics</span>
+              <span class="text-sm font-bold text-white tracking-wide uppercase">Macro Regime Matrix</span>
+              <span class="text-[11px] text-slate-500 font-mono">Multi-Dimensional (Level · Trend · Stress)</span>
             </div>
-            <span class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700/50">Rule-Based Evaluation</span>
+            <span class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700/50">Rule-Based Calibration</span>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4" id="regime-grid">
@@ -133,16 +135,16 @@
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800/70 flex flex-wrap items-center justify-between text-xs text-slate-400">
+        <div class="mt-4 pt-3 border-t border-slate-800/70 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-slate-500">Regime Status:</span>
+            <span class="text-slate-500">Summary:</span>
             <span id="regime-summary-badge" class="font-medium text-slate-200">Evaluating macro drivers...</span>
           </div>
-          <span class="text-[11px] text-slate-500">Objective structural classification (No Buy/Sell signals)</span>
+          <span class="text-[11px] text-slate-500 font-mono">Objective structural diagnosis (No financial advice)</span>
         </div>
       </div>
 
-      <!-- Market Divergence & Liquidity Gauge (5 cols) -->
+      <!-- Market Divergence & Rolling Pearson Correlation Board (5 cols) -->
       <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
         <div>
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -150,23 +152,34 @@
               <span class="text-sm font-bold text-white tracking-wide uppercase">Market Divergence</span>
               <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded" id="divergence-case-pill">EVALUATING</span>
             </div>
-            <span class="text-xs text-slate-500 font-mono">Cross-Asset Dynamics</span>
+            <span class="text-xs text-slate-500 font-mono">Statistical & Flow Shifts</span>
           </div>
 
-          <div class="mt-3 p-3.5 bg-slate-950/60 rounded-xl border border-slate-800/80" id="divergence-container">
+          <div class="mt-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80" id="divergence-container">
             <div class="text-xs font-semibold text-cyan-400 mb-1" id="divergence-title">Cross-Market Alignment</div>
             <div class="text-xs text-slate-300 leading-relaxed" id="divergence-message">Analyzing correlation divergence between DXY, Real Yields, TradFi risk equities, and BTC spot/leverage flows...</div>
           </div>
+
+          <!-- Rolling Pearson Correlation (30D vs 90D) -->
+          <div class="mt-3">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+              <span>Rolling Pearson Correlations (BTC vs Macro)</span>
+              <span class="text-slate-500">30D vs 90D Window</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-mono" id="correlation-grid">
+              <!-- Dynamically rendered rolling correlations -->
+            </div>
+          </div>
         </div>
 
-        <!-- US Liquidity Proxy Banner -->
+        <!-- US Net Liquidity Proxy Banner -->
         <div class="mt-3 p-3 bg-gradient-to-r from-slate-950 to-slate-900 rounded-xl border border-slate-800 flex items-center justify-between">
           <div>
             <div class="flex items-center gap-1.5">
-              <span class="text-[11px] font-medium text-slate-400">US Liquidity Proxy</span>
-              <span class="text-[10px] text-cyan-400 bg-cyan-950/50 px-1.5 py-0.2 rounded border border-cyan-800/40">Derived</span>
+              <span class="text-[11px] font-medium text-slate-400">US Net Liquidity Proxy</span>
+              <span class="text-[10px] text-cyan-400 bg-cyan-950/50 px-1.5 py-0.2 rounded border border-cyan-800/40">Fed BS - TGA - RRP</span>
             </div>
-            <div class="text-[11px] text-slate-500 font-mono">Fed BS - TGA - RRP</div>
+            <div class="text-[10px] text-slate-500 font-mono">Domestic financial liquidity proxy (Wed snapshot)</div>
           </div>
           <div class="text-right">
             <div class="text-lg font-bold font-mono text-white" id="proxy-headline-val">--</div>
@@ -182,9 +195,9 @@
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">1. Core Market Overview</h2>
-          <span class="text-xs text-slate-500">BTC, ETF Inflows, USD Index & Sentiment</span>
+          <span class="text-xs text-slate-500">BTC Spot Close, Spot ETF Flows, Dollar Index (DXY) & Sentiment</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Tier-1 Anchor Assets</span>
+        <span class="text-xs font-mono text-slate-500">Daily Snapshot</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="overview-cards"></div>
     </section>
@@ -194,7 +207,7 @@
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. Traditional Risk Assets & Credit</h2>
-          <span class="text-xs text-slate-500">S&P 500, Nasdaq, VIX & High Yield Spreads</span>
+          <span class="text-xs text-slate-500">S&P 500, Nasdaq 100, VIX Volatility & ICE BofA HY OAS Credit Spread</span>
         </div>
         <span class="text-xs font-mono text-slate-500">Equity & Credit Risk Premium</span>
       </div>
@@ -206,7 +219,7 @@
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. Rates & Yield Curve</h2>
-          <span class="text-xs text-slate-500">Nominal 10Y/2Y, Real Yield (TIPS), 10Y-2Y Spread & Treasury Rate Path</span>
+          <span class="text-xs text-slate-500">Nominal 10Y/2Y, 10Y TIPS Real Yield, 10Y-2Y Curve & FOMC Target Range</span>
         </div>
         <span class="text-xs font-mono text-slate-500">Sovereign Debt Benchmark</span>
       </div>
@@ -217,8 +230,8 @@
     <section class="space-y-3" id="sec-liquidity">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">4. US Dollar Liquidity System</h2>
-          <span class="text-xs text-slate-500">Fed Assets (WALCL), TGA, RRP, Bank Reserves & Derived Liquidity Proxy</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">4. US Net Liquidity System</h2>
+          <span class="text-xs text-slate-500">Fed Assets (WALCL), TGA (WDTGAL), RRP (Daily), Bank Reserves & Net Liquidity Proxy</span>
         </div>
         <span class="text-xs font-mono text-slate-500">Central Bank Balance Sheet</span>
       </div>
@@ -229,10 +242,10 @@
     <section class="space-y-3" id="sec-crypto-flow">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">5. Crypto Capital Flow & Market Structure</h2>
-          <span class="text-xs text-slate-500">Stablecoins, Funding Rates & Open Interest</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">5. Crypto Capital Flow & Leverage Structure</h2>
+          <span class="text-xs text-slate-500">Stablecoins, Binance BTC Perpetual Funding & Binance Open Interest</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Internal Purchasing Power & Leverage</span>
+        <span class="text-xs font-mono text-slate-500">Capital Flow & Derivatives Leverage</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="crypto-flow-cards"></div>
     </section>
@@ -242,7 +255,7 @@
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">6. Macro Commodities</h2>
-          <span class="text-xs text-slate-500">COMEX Gold & WTI Crude Oil</span>
+          <span class="text-xs text-slate-500">COMEX Gold & NYMEX WTI Crude Oil</span>
         </div>
         <span class="text-xs font-mono text-slate-500">Inflation & Real Store of Value</span>
       </div>
@@ -255,17 +268,43 @@
         <div class="flex items-center gap-2">
           <span class="font-bold text-slate-400">Macro Daily Dashboard</span>
           <span>·</span>
-          <span>Official Data Sources: Federal Reserve (FRED/H.4.1), U.S. Treasury, CBOE, Farside Investors, DefiLlama, Binance Futures</span>
+          <span>Official Data Sources: Federal Reserve (FRED/H.4.1), U.S. Treasury, ICE, CBOE, Farside Investors, DefiLlama, Binance Futures</span>
         </div>
-        <p class="text-[11px] text-slate-600">Strictly non-commercial research instrument. No financial advice or trade signals generated.</p>
+        <p class="text-[11px] text-slate-600">Strictly non-commercial research instrument. No financial advice or buy/sell signals generated.</p>
       </div>
       <div class="flex items-center gap-3 font-mono text-[11px]">
-        <span>Automated Daily Sync via GitHub Actions</span>
+        <button onclick="toggleDataQualityModal(true)" class="text-slate-400 hover:text-cyan-400 transition underline">View Data Quality Report</button>
         <span>·</span>
         <a href="./data.json" target="_blank" class="text-cyan-400 hover:underline">data.json</a>
       </div>
     </footer>
 
+  </div>
+
+  <!-- Data Quality Inspection Modal -->
+  <div id="dq-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <h3 class="text-base font-bold text-white tracking-wide">Data Quality & Health Audit</h3>
+          <span class="px-2 py-0.5 text-xs font-mono rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="modal-dq-summary">--</span>
+        </div>
+        <button onclick="toggleDataQualityModal(false)" class="text-slate-400 hover:text-white text-lg font-mono">✕</button>
+      </div>
+
+      <div class="text-xs text-slate-400">
+        Every metric is tracked and grounded in verifiable data feeds. Outages, stale caches, and missing API credentials are transparently reported below without simulated values.
+      </div>
+
+      <div class="overflow-y-auto custom-scrollbar flex-1 pr-1" id="modal-dq-list">
+        <!-- Dynamically rendered list of all 27 metrics -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
+        <span>Grounded Data Integrity Standard</span>
+        <button onclick="toggleDataQualityModal(false)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">Close</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -274,6 +313,14 @@
     let selectedTimezone = 'UTC';
     let selectedDays = 30;
     const chartInstances = {};
+
+    function toggleDataQualityModal(show) {
+      const modal = document.getElementById('dq-modal');
+      if (modal) {
+        if (show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
+      }
+    }
 
     function setTimezone(tz) {
       selectedTimezone = tz;
@@ -357,6 +404,7 @@
       const hy = d.traditional_risk?.hy_spread;
       const funding = d.crypto_leverage?.funding_rate;
       const divCase = d.market_divergence?.[0]?.case_id || 'Neutral';
+      const dq = d.data_quality;
 
       const items = [
         { q: '1. BTC Price', a: btc ? `$${Number(btc.current).toLocaleString()} (${formatChangePct(btc.change_1d)})` : '--', target: 'btc', tone: (btc?.change_1d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
@@ -366,13 +414,13 @@
         { q: '5. US Liquidity', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
         { q: '6. Equities', a: d.macro_regime?.equities || 'Risk-Off', target: 'spx', tone: d.macro_regime?.equities === 'Risk-On' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
         { q: '7. Credit Stress', a: hy ? `${hy.current}% (${d.macro_regime?.credit})` : '--', target: 'hy-spread', tone: d.macro_regime?.credit === 'Healthy' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '8. Crypto Leverage', a: funding ? `${funding.heat} (${funding.annualized_pct}% Ann.)` : '--', target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-slate-800 text-slate-300 border-slate-700' },
+        { q: '8. Crypto Leverage', a: funding?.status === 'ok' ? `${funding.heat} (${funding.annualized_pct}% Ann.)` : (d.macro_regime?.crypto_leverage || 'Unavailable'), target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : (d.macro_regime?.crypto_leverage === 'Unavailable' ? 'bg-slate-800/60 text-slate-400 border-slate-700' : 'bg-slate-800 text-slate-300 border-slate-700') },
         { q: '9. Divergence', a: divCase, target: 'btc', tone: divCase !== 'Neutral' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-slate-800 text-slate-400 border-slate-700' },
-        { q: '10. Data Quality', a: '100% Live Sync', target: 'header-updated', tone: 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '10. Data Quality', a: dq ? dq.summary : '100%', target: 'modal', isModalTrigger: true, tone: dq?.health_state === 'Optimal' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' },
       ];
 
       strip.innerHTML = items.map(it => `
-        <button onclick="scrollToCard('${it.target}')" class="px-2.5 py-1 rounded-lg border ${it.tone} hover:brightness-125 transition flex items-center gap-1.5 cursor-pointer">
+        <button onclick="${it.isModalTrigger ? 'toggleDataQualityModal(true)' : `scrollToCard('${it.target}')`}" class="px-2.5 py-1 rounded-lg border ${it.tone} hover:brightness-125 transition flex items-center gap-1.5 cursor-pointer">
           <span class="text-slate-400 font-sans font-medium text-[11px]">${it.q}:</span>
           <span class="font-bold">${it.a}</span>
         </button>
@@ -384,31 +432,70 @@
       container.innerHTML = '';
       if (!regime) return;
 
+      const dims = regime.dimensions || {};
+
       const items = [
-        { label: 'USD (DXY)', val: regime.usd, good: regime.usd === 'Weak', tone: regime.usd === 'Strong' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
-        { label: '10Y Real Yield', val: regime.real_yield, good: regime.real_yield === 'Falling', tone: regime.real_yield === 'Rising' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
-        { label: 'US Liquidity', val: regime.liquidity, good: regime.liquidity === 'Expanding', tone: regime.liquidity === 'Expanding' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
-        { label: 'TradFi Equities', val: regime.equities, good: regime.equities === 'Risk-On', tone: regime.equities === 'Risk-On' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/30 text-amber-400 bg-amber-500/10' },
-        { label: 'Credit Market', val: regime.credit, good: regime.credit === 'Healthy', tone: regime.credit === 'Healthy' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
-        { label: 'BTC ETF Flow', val: regime.btc_etf_flow, good: regime.btc_etf_flow === 'Inflow', tone: regime.btc_etf_flow === 'Inflow' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
-        { label: 'Crypto Leverage', val: regime.crypto_leverage, good: regime.crypto_leverage === 'Normal', tone: regime.crypto_leverage === 'Elevated' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : (regime.crypto_leverage === 'Low' ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' : 'border-slate-700 text-slate-300 bg-slate-800/40') },
+        { 
+          label: 'USD (DXY)', 
+          val: regime.usd, 
+          sub: dims.usd ? `Lvl: ${dims.usd.level} · Tr: ${dims.usd.trend}` : '',
+          tone: regime.usd === 'Strong' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' 
+        },
+        { 
+          label: '10Y Real Yield', 
+          val: regime.real_yield, 
+          sub: dims.real_yield ? `Lvl: ${dims.real_yield.level} · Stress: ${dims.real_yield.stress}` : '',
+          tone: regime.real_yield === 'Rising' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' 
+        },
+        { 
+          label: 'US Net Liquidity', 
+          val: regime.liquidity, 
+          sub: dims.liquidity ? `30D: ${dims.liquidity.change_30d >= 0 ? '+' : ''}${dims.liquidity.change_30d}%` : '',
+          tone: regime.liquidity === 'Expanding' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
+        },
+        { 
+          label: 'TradFi Equities', 
+          val: regime.equities, 
+          sub: dims.equities ? `VIX: ${dims.equities.vix_current || '--'}` : '',
+          tone: regime.equities === 'Risk-On' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/30 text-amber-400 bg-amber-500/10' 
+        },
+        { 
+          label: 'Credit Market', 
+          val: regime.credit, 
+          sub: dims.credit ? `OAS: ${dims.credit.current_spread}%` : '',
+          tone: regime.credit === 'Healthy' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
+        },
+        { 
+          label: 'BTC ETF Flow', 
+          val: regime.btc_etf_flow, 
+          sub: dims.btc_etf_flow ? `7D: ${dims.btc_etf_flow.flow_7d_mil >= 0 ? '+' : ''}$${dims.btc_etf_flow.flow_7d_mil}M` : '',
+          tone: regime.btc_etf_flow === 'Inflow' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
+        },
+        { 
+          label: 'Crypto Leverage', 
+          val: regime.crypto_leverage, 
+          sub: dims.crypto_leverage ? (dims.crypto_leverage.funding_annualized ? `${dims.crypto_leverage.funding_annualized}% Ann.` : 'Binance Data') : '',
+          tone: regime.crypto_leverage === 'Elevated' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : (regime.crypto_leverage === 'Unavailable' ? 'border-slate-800 text-slate-500 bg-slate-900/40' : 'border-slate-700 text-slate-300 bg-slate-800/40') 
+        },
       ];
 
       items.forEach(it => {
         const el = document.createElement('div');
         el.className = `p-2.5 rounded-xl border ${it.tone} flex flex-col justify-between`;
         el.innerHTML = `
-          <div class="text-[11px] text-slate-400 font-medium truncate">${it.label}</div>
-          <div class="text-sm font-bold mt-1 font-mono tracking-wide">${it.val}</div>
+          <div>
+            <div class="text-[11px] text-slate-400 font-medium truncate">${it.label}</div>
+            <div class="text-sm font-bold mt-1 font-mono tracking-wide">${it.val}</div>
+          </div>
+          ${it.sub ? `<div class="text-[10px] font-mono opacity-75 mt-1.5 truncate">${it.sub}</div>` : ''}
         `;
         container.appendChild(el);
       });
 
-      const summaryText = `${regime.liquidity} Liquidity · ${regime.usd} USD · ${regime.equities} Equities · ETF ${regime.btc_etf_flow}`;
-      document.getElementById('regime-summary-badge').innerText = summaryText;
+      document.getElementById('regime-summary-badge').innerText = regime.summary || 'Macro calibration complete.';
     }
 
-    function renderDivergence(divList) {
+    function renderDivergence(divList, correlations) {
       if (!divList || !divList.length) return;
       const active = divList[0];
       
@@ -423,12 +510,84 @@
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
       } else if (active.case_id === 'Case C') {
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      } else if (active.case_id === 'Shift-Corr') {
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-purple-500/20 text-purple-300 border border-purple-500/40';
       } else {
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-800 text-slate-400 border border-slate-700';
       }
 
-      title.innerText = active.name || 'Macro Alignment';
+      title.innerText = (active.type ? `[${active.type}] ` : '') + (active.name || 'Macro Alignment');
       msg.innerText = active.message || 'Relationships operating in baseline historical range.';
+
+      // Render Rolling Correlation Grid
+      const corrGrid = document.getElementById('correlation-grid');
+      if (corrGrid && correlations) {
+        corrGrid.innerHTML = '';
+        const pairs = [
+          { name: 'BTC / Nasdaq 100', c: correlations.btc_nasdaq },
+          { name: 'BTC / US Dollar (DXY)', c: correlations.btc_dxy },
+          { name: 'BTC / 10Y Real Yield', c: correlations.btc_real_yield },
+          { name: 'BTC / COMEX Gold', c: correlations.btc_gold }
+        ];
+
+        pairs.forEach(p => {
+          const c30 = p.c?.corr_30d;
+          const c90 = p.c?.corr_90d;
+          const color30 = c30 != null ? (c30 >= 0 ? 'text-emerald-400' : 'text-rose-400') : 'text-slate-500';
+          const el = document.createElement('div');
+          el.className = 'p-1.5 rounded bg-slate-950 border border-slate-800 flex items-center justify-between';
+          el.innerHTML = `
+            <span class="text-slate-400 text-[10px] truncate max-w-[100px]">${p.name}:</span>
+            <div class="space-x-1.5">
+              <span class="${color30} font-bold">${c30 != null ? (c30 >= 0 ? '+' : '') + c30.toFixed(2) : '--'} (30D)</span>
+              <span class="text-slate-500 text-[10px]">${c90 != null ? (c90 >= 0 ? '+' : '') + c90.toFixed(2) : '--'} (90D)</span>
+            </div>
+          `;
+          corrGrid.appendChild(el);
+        });
+      }
+    }
+
+    function renderDataQualityModal(dq) {
+      if (!dq) return;
+      document.getElementById('modal-dq-summary').innerText = dq.summary;
+      document.getElementById('dq-header-status').innerText = `Health: ${dq.summary}`;
+
+      const list = document.getElementById('modal-dq-list');
+      if (!list) return;
+
+      list.innerHTML = `
+        <table class="w-full text-[11px] font-mono text-left">
+          <thead>
+            <tr class="text-slate-500 border-b border-slate-800 pb-1">
+              <th class="py-1">Metric</th>
+              <th class="py-1">Category</th>
+              <th class="py-1">Status</th>
+              <th class="py-1">Frequency</th>
+              <th class="py-1 text-right">Source</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/40">
+            ${dq.metrics.map(m => `
+              <tr class="hover:bg-slate-800/20">
+                <td class="py-1.5 text-slate-200 font-semibold">${m.name}</td>
+                <td class="py-1.5 text-slate-400">${m.category}</td>
+                <td class="py-1.5">
+                  <span class="px-1.5 py-0.2 rounded text-[10px] ${
+                    m.status === 'ok' 
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' 
+                      : (m.status === 'stale' ? 'bg-amber-950 text-amber-400 border border-amber-800/40' : 'bg-rose-950 text-rose-400 border border-rose-800/40')
+                  }">
+                    ${m.status.toUpperCase()}
+                  </span>
+                </td>
+                <td class="py-1.5 text-slate-400">${m.frequency}</td>
+                <td class="py-1.5 text-slate-500 text-right truncate max-w-[140px]">${m.source}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
     }
 
     function createCardHTML(cfg) {
@@ -440,7 +599,7 @@
       if (cfg.status === 'unavailable') {
         staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-rose-950/40 text-rose-400 border border-rose-800/30">Unavailable</span>`;
       } else if (cfg.status === 'stale') {
-        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-amber-950/40 text-amber-400 border border-amber-800/30">${cfg.stale_label || 'Stale'}</span>`;
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-amber-950/40 text-amber-400 border border-amber-800/30">${cfg.stale_label || 'Stale Cache'}</span>`;
       } else {
         staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700/50">${cfg.frequency || 'Daily'}</span>`;
       }
@@ -476,7 +635,6 @@
         `;
       }
 
-      // Optional extra custom HTML (e.g. for stablecoin breakdown or rate path)
       let customHTML = cfg.customHTML || '';
 
       return `
@@ -499,7 +657,7 @@
                   ${changeText}
                 </div>
               ` : `
-                <div class="text-[11px] text-slate-500 font-mono italic">${cfg.reason || 'Missing Key'}</div>
+                <div class="text-[11px] text-slate-500 font-mono italic">${cfg.reason || 'Unavailable'}</div>
               `}
             </div>
 
@@ -517,7 +675,7 @@
           <div class="mt-3">
             <div class="h-16 w-full ${cfg.status === 'unavailable' ? 'opacity-20 flex items-center justify-center border border-dashed border-slate-800 rounded' : ''}">
               ${cfg.status === 'unavailable' ? `
-                <span class="text-[11px] text-slate-600 font-mono">Data Source Unavailable</span>
+                <span class="text-[11px] text-slate-600 font-mono">Data Feed Inactive</span>
               ` : `
                 <canvas id="chart-${cfg.chartId}"></canvas>
               `}
@@ -526,7 +684,7 @@
             <!-- Card Footer -->
             <div class="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500 font-mono">
               <span title="Updated">${formatDate(cfg.updated)}</span>
-              <span title="Data Source" class="text-slate-500 hover:text-slate-400">${cfg.source || 'Official'}</span>
+              <span title="Data Source" class="text-slate-500 hover:text-slate-400 truncate max-w-[150px]">${cfg.source || 'Official'}</span>
             </div>
           </div>
         </div>
@@ -581,7 +739,7 @@
         return;
       }
 
-      // Standard Line Sparkline
+      // Line Sparkline
       chartInstances[canvasId] = new Chart(ctx, {
         type: 'line',
         data: {
@@ -628,11 +786,14 @@
       // 10-Second Executive Strip
       renderExecutiveStrip(d);
 
+      // Data Quality Modal Population
+      renderDataQualityModal(d.data_quality);
+
       // 0. Macro Regime & Divergence
       renderRegime(d.macro_regime);
-      renderDivergence(d.market_divergence);
+      renderDivergence(d.market_divergence, d.rolling_correlations);
 
-      // US Liquidity Proxy Headline
+      // US Net Liquidity Proxy Headline
       const proxy = d.us_liquidity?.us_liquidity_proxy;
       if (proxy) {
         document.getElementById('proxy-headline-val').innerText = `$${proxy.current_tril}T`;
@@ -654,16 +815,16 @@
         {
           chartId: 'btc',
           title: 'Bitcoin (BTC / USD)',
-          value: btc ? `$${Number(btc.current).toLocaleString('en-US')}` : '--',
+          value: btc?.current ? `$${Number(btc.current).toLocaleString('en-US')}` : '--',
           change_1d: btc?.change_1d,
           percentile_1y: btc?.percentile_1y,
           horizonItems: [
             { label: '7D', val: btc?.change_7d, display: formatChangePct(btc?.change_7d) },
             { label: '30D', val: btc?.change_30d, display: formatChangePct(btc?.change_30d) }
           ],
-          frequency: btc?.frequency || 'Intraday',
+          frequency: 'Daily',
           updated: btc?.updated,
-          source: btc?.source || 'Exchange',
+          source: btc?.source || 'Yahoo Finance (BTC-USD)',
           status: btc?.status,
           history: btc?.history,
           color: '#f59e0b'
@@ -681,7 +842,7 @@
           ],
           frequency: etf?.frequency || 'Daily (T+1)',
           updated: etf?.updated,
-          source: etf?.source || 'Farside',
+          source: etf?.source || 'Farside Investors',
           status: etf?.status,
           history: etf?.history_30d,
           isBar: true
@@ -696,9 +857,9 @@
             { label: '7D', val: dxy?.change_7d, display: formatChangePct(dxy?.change_7d) },
             { label: '30D', val: dxy?.change_30d, display: formatChangePct(dxy?.change_30d) }
           ],
-          frequency: dxy?.frequency || 'Intraday',
+          frequency: 'Daily',
           updated: dxy?.updated,
-          source: dxy?.source || 'ICE / NYBOT',
+          source: dxy?.source || 'ICE / Yahoo (DX-Y.NYB)',
           status: dxy?.status,
           history: dxy?.history,
           color: '#38bdf8'
@@ -749,16 +910,16 @@
             { label: '7D', val: spx?.change_7d, display: formatChangePct(spx?.change_7d) },
             { label: '30D', val: spx?.change_30d, display: formatChangePct(spx?.change_30d) }
           ],
-          frequency: spx?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: spx?.updated,
-          source: spx?.source || 'S&P Dow Jones',
+          source: spx?.source || 'S&P Dow Jones / Yahoo',
           status: spx?.status,
           history: spx?.history,
           color: '#10b981'
         },
         {
           chartId: 'ndx',
-          title: 'Nasdaq 100 (NDX / IXIC)',
+          title: 'Nasdaq 100 (NDX)',
           value: ndx?.current ? Number(ndx.current).toLocaleString('en-US') : '--',
           change_1d: ndx?.change_1d,
           percentile_1y: ndx?.percentile_1y,
@@ -766,9 +927,9 @@
             { label: '7D', val: ndx?.change_7d, display: formatChangePct(ndx?.change_7d) },
             { label: '30D', val: ndx?.change_30d, display: formatChangePct(ndx?.change_30d) }
           ],
-          frequency: ndx?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: ndx?.updated,
-          source: ndx?.source || 'Nasdaq',
+          source: ndx?.source || 'Nasdaq / Yahoo',
           status: ndx?.status,
           history: ndx?.history,
           color: '#06b6d4'
@@ -784,9 +945,9 @@
             { label: '7D', val: vix?.change_7d, display: formatChangePct(vix?.change_7d) },
             { label: '30D', val: vix?.change_30d, display: formatChangePct(vix?.change_30d) }
           ],
-          frequency: vix?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: vix?.updated,
-          source: vix?.source || 'CBOE',
+          source: vix?.source || 'CBOE / Yahoo',
           status: vix?.status,
           history: vix?.history,
           color: '#f43f5e'
@@ -802,7 +963,7 @@
             { label: '1W bp', val: hy?.change_1w_bp, display: formatChangeBp(hy?.change_1w_bp) },
             { label: '1M bp', val: hy?.change_1m_bp, display: formatChangeBp(hy?.change_1m_bp) }
           ],
-          frequency: hy?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: hy?.updated,
           source: hy?.source || 'ICE BofA / FRED',
           status: hy?.status,
@@ -823,13 +984,17 @@
       const u2y = d.rates?.us2y;
       const real10y = d.rates?.us10y_real;
       const spread102 = d.rates?.spread_10y_2y;
+      const fedFunds = d.rates?.fed_funds;
       const ratePath = d.rates?.rate_path;
 
-      let ratePathHTML = '';
+      let fedTargetHTML = '';
       if (ratePath) {
-        ratePathHTML = `
+        fedTargetHTML = `
           <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono">
-            <div class="text-slate-500 mb-1">Treasury Bill Curve (Implied Path):</div>
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span>Short-End T-Bill Curve:</span>
+              <span class="text-[9px] text-slate-500">Bill Liquidity</span>
+            </div>
             <div class="grid grid-cols-4 gap-1 text-center bg-slate-950 p-1.5 rounded border border-slate-800">
               <div><span class="text-slate-500 block text-[9px]">1M</span><span class="text-cyan-400 font-bold">${ratePath.m1 ?? '--'}%</span></div>
               <div><span class="text-slate-500 block text-[9px]">3M</span><span class="text-cyan-400 font-bold">${ratePath.m3 ?? '--'}%</span></div>
@@ -852,9 +1017,9 @@
             { label: '7D bp', val: u10y?.change_7d_bp, display: formatChangeBp(u10y?.change_7d_bp) },
             { label: '30D bp', val: u10y?.change_30d_bp, display: formatChangeBp(u10y?.change_30d_bp) }
           ],
-          frequency: u10y?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: u10y?.updated,
-          source: u10y?.source || 'FRED',
+          source: u10y?.source || 'FRED (DGS10)',
           status: u10y?.status,
           history: u10y?.history,
           color: '#f97316'
@@ -870,9 +1035,9 @@
             { label: '7D bp', val: u2y?.change_7d_bp, display: formatChangeBp(u2y?.change_7d_bp) },
             { label: '30D bp', val: u2y?.change_30d_bp, display: formatChangeBp(u2y?.change_30d_bp) }
           ],
-          frequency: u2y?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: u2y?.updated,
-          source: u2y?.source || 'FRED',
+          source: u2y?.source || 'FRED (DGS2)',
           status: u2y?.status,
           history: u2y?.history,
           color: '#fb923c'
@@ -889,7 +1054,7 @@
             { label: '7D bp', val: real10y?.change_7d_bp, display: formatChangeBp(real10y?.change_7d_bp) },
             { label: '30D bp', val: real10y?.change_30d_bp, display: formatChangeBp(real10y?.change_30d_bp) }
           ],
-          frequency: real10y?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: real10y?.updated,
           source: real10y?.source || 'FRED (DFII10)',
           status: real10y?.status,
@@ -907,26 +1072,30 @@
             { label: '7D bp', val: spread102?.change_7d_bp, display: formatChangeBp(spread102?.change_7d_bp) },
             { label: '30D bp', val: spread102?.change_30d_bp, display: formatChangeBp(spread102?.change_30d_bp) }
           ],
-          frequency: spread102?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: spread102?.updated,
-          source: spread102?.source || 'FRED',
+          source: spread102?.source || 'FRED (10Y-2Y)',
           status: spread102?.status,
           history: spread102?.history,
           color: '#3b82f6'
         },
         {
           chartId: 'fedfunds',
-          title: 'Fed Rate Path / Futures',
-          badge: 'T-Bill Curve',
-          value: ratePath?.m1 != null ? `${ratePath.m1}%` : '--',
-          change_1d_text: 'Next Mtg (1M)',
+          title: 'Fed Target Range & EFFR',
+          badge: 'FOMC Policy',
+          value: fedFunds?.target_range || (fedFunds?.current ? `${fedFunds.current}%` : '--'),
+          change_1d_text: `EFFR: ${fedFunds?.effective_rate != null ? fedFunds.effective_rate + '%' : '--'}`,
           isPositive: true,
-          customHTML: ratePathHTML,
-          frequency: ratePath?.frequency || 'Daily',
-          updated: ratePath?.updated,
-          source: ratePath?.source || 'FRED (Treasury)',
-          status: ratePath?.status,
-          history: [],
+          customHTML: fedTargetHTML,
+          horizonItems: [
+            { label: 'Effective (DFF)', val: fedFunds?.effective_rate, display: `${fedFunds?.effective_rate}%` },
+            { label: 'Target Adj', val: fedFunds?.target_change_bp, display: `${fedFunds?.target_change_bp >= 0 ? '+' : ''}${fedFunds?.target_change_bp} bp` }
+          ],
+          frequency: 'Daily (FOMC)',
+          updated: fedFunds?.target_updated || fedFunds?.updated,
+          source: 'FRED (DFEDTARU/L & DFF)',
+          status: fedFunds?.status,
+          history: fedFunds?.history || [],
           color: '#8b5cf6'
         }
       ];
@@ -940,7 +1109,7 @@
         }
       });
 
-      // SECTION 4: US LIQUIDITY CARDS
+      // SECTION 4: US DOLLAR LIQUIDITY CARDS
       const liqContainer = document.getElementById('liquidity-cards');
       liqContainer.innerHTML = '';
       const fedBs = d.us_liquidity?.fed_balance_sheet;
@@ -961,9 +1130,9 @@
             { label: '6M', val: fedBs?.change_6m, display: formatChangePct(fedBs?.change_6m) },
             { label: 'YoY', val: fedBs?.change_yoy, display: formatChangePct(fedBs?.change_yoy) }
           ],
-          frequency: fedBs?.frequency || 'Weekly',
+          frequency: 'Weekly (H.4.1)',
           updated: fedBs?.updated,
-          source: fedBs?.source || 'Fed H.4.1',
+          source: 'Federal Reserve (WALCL)',
           status: fedBs?.status,
           history: fedBs?.history,
           color: '#ec4899'
@@ -978,9 +1147,9 @@
             { label: '7D', val: tga?.change_7d, display: formatChangePct(tga?.change_7d) },
             { label: '30D', val: tga?.change_30d, display: formatChangePct(tga?.change_30d) }
           ],
-          frequency: tga?.frequency || 'Weekly',
+          frequency: 'Weekly',
           updated: tga?.updated,
-          source: tga?.source || 'Treasury / FRED',
+          source: 'U.S. Treasury (WDTGAL)',
           status: tga?.status,
           history: tga?.history,
           color: '#6366f1'
@@ -995,9 +1164,9 @@
             { label: '7D', val: rrp?.change_7d, display: formatChangePct(rrp?.change_7d) },
             { label: '30D', val: rrp?.change_30d, display: formatChangePct(rrp?.change_30d) }
           ],
-          frequency: rrp?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: rrp?.updated,
-          source: rrp?.source || 'NY Fed / FRED',
+          source: 'NY Fed (RRPONTSYD)',
           status: rrp?.status,
           history: rrp?.history,
           color: '#14b8a6'
@@ -1012,16 +1181,16 @@
             { label: '30D', val: reserves?.change_30d, display: formatChangePct(reserves?.change_30d) },
             { label: 'Nature', val: 'Fed Liability', display: 'Reserve Balances', color: 'text-slate-400' }
           ],
-          frequency: reserves?.frequency || 'Weekly',
+          frequency: 'Weekly (H.4.1)',
           updated: reserves?.updated,
-          source: reserves?.source || 'FRED (WRBWFRBL)',
+          source: 'Federal Reserve (WRBWFRBL)',
           status: reserves?.status,
           history: reserves?.history,
           color: '#10b981'
         },
         {
           chartId: 'liqproxy',
-          title: 'US Liquidity Proxy',
+          title: 'US Net Liquidity Proxy',
           badge: 'Derived',
           value: liqProxy?.current_tril != null ? `$${liqProxy.current_tril}T` : '--',
           change_1d_text: liqProxy?.change_30d != null ? `30D: ${formatChangePct(liqProxy.change_30d)}` : '--',
@@ -1030,9 +1199,9 @@
             { label: '7D', val: liqProxy?.change_7d, display: formatChangePct(liqProxy?.change_7d) },
             { label: '30D', val: liqProxy?.change_30d, display: formatChangePct(liqProxy?.change_30d) }
           ],
-          frequency: liqProxy?.frequency || 'Weekly',
+          frequency: 'Weekly (Wed)',
           updated: liqProxy?.updated,
-          source: liqProxy?.source || 'Derived Indicator',
+          source: 'Derived (Fed BS - TGA - RRP)',
           status: liqProxy?.status,
           history: liqProxy?.history,
           color: '#38bdf8'
@@ -1082,9 +1251,10 @@
           customHTML: stableBreakdownHTML,
           horizonItems: [
             { label: '7D', val: stable?.change_7d, display: formatChangePct(stable?.change_7d) },
-            { label: '90D', val: stable?.change_90d, display: formatChangePct(stable?.change_90d) }
+            { label: '90D', val: stable?.change_90d, display: formatChangePct(stable?.change_90d) },
+            { label: '30D Issuance', val: stable?.net_issuance_30d_bil, display: `${stable?.net_issuance_30d_bil >= 0 ? '+' : ''}$${stable?.net_issuance_30d_bil}B` }
           ],
-          frequency: stable?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: stable?.updated,
           source: stable?.source || 'DefiLlama',
           status: stable?.status,
@@ -1093,7 +1263,7 @@
         },
         {
           chartId: 'funding',
-          title: 'BTC Funding Rate',
+          title: 'Binance BTC Funding Rate',
           value: funding?.rate_8h != null ? `${funding.rate_8h >= 0 ? '+' : ''}${funding.rate_8h}%` : '--',
           change_1d_text: funding?.annualized_pct != null ? `${funding.annualized_pct}% Ann.` : '--',
           isPositive: (funding?.annualized_pct ?? 0) <= 15,
@@ -1103,14 +1273,14 @@
           ],
           frequency: funding?.frequency || '8 Hours',
           updated: funding?.updated,
-          source: funding?.source || 'Binance Futures',
+          source: funding?.source || 'Binance Futures (BTCUSDT)',
           status: funding?.status,
           history: [],
           color: '#f59e0b'
         },
         {
           chartId: 'oi',
-          title: 'BTC Open Interest',
+          title: 'Binance BTC Open Interest',
           value: oi?.total_usd_bil != null ? `$${oi.total_usd_bil}B` : '--',
           change_1d: oi?.change_24h,
           horizonItems: [
@@ -1118,9 +1288,9 @@
             { label: '7D', val: oi?.change_7d, display: formatChangePct(oi?.change_7d) },
             { label: 'BTC', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' }
           ],
-          frequency: oi?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: oi?.updated,
-          source: oi?.source || 'Binance Futures',
+          source: oi?.source || 'Binance Futures (BTC)',
           status: oi?.status,
           history: oi?.history,
           color: '#6366f1'
@@ -1162,16 +1332,16 @@
             { label: '7D', val: gold?.change_7d, display: formatChangePct(gold?.change_7d) },
             { label: '30D', val: gold?.change_30d, display: formatChangePct(gold?.change_30d) }
           ],
-          frequency: gold?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: gold?.updated,
-          source: gold?.source || 'COMEX / CME',
+          source: gold?.source || 'COMEX Gold Futures / Yahoo',
           status: gold?.status,
           history: gold?.history,
           color: '#fbbf24'
         },
         {
           chartId: 'oil',
-          title: 'WTI Crude Oil (CL=F)',
+          title: 'NYMEX WTI Crude (CL=F)',
           value: oil?.current ? `$${oil.current}` : '--',
           change_1d: oil?.change_1d,
           percentile_1y: oil?.percentile_1y,
@@ -1179,9 +1349,9 @@
             { label: '7D', val: oil?.change_7d, display: formatChangePct(oil?.change_7d) },
             { label: '30D', val: oil?.change_30d, display: formatChangePct(oil?.change_30d) }
           ],
-          frequency: oil?.frequency || 'Daily',
+          frequency: 'Daily',
           updated: oil?.updated,
-          source: oil?.source || 'NYMEX / CME',
+          source: oil?.source || 'NYMEX WTI Crude / Yahoo',
           status: oil?.status,
           history: oil?.history,
           color: '#a855f7'

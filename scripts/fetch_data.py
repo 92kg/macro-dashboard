@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 import requests
+import pandas as pd
 import yfinance as yf
 from bs4 import BeautifulSoup
 
@@ -23,13 +24,14 @@ DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 }
 
-def get_fred_series_all():
+def get_fred_series_all(prev_data=None):
     """
     Fetches all required FRED series sequentially using a shared session.
-    St. Louis Fed drops connections if hit with many concurrent requests from the same IP.
+    Includes target rate upper/lower limits (DFEDTARU, DFEDTARL) and daily effective rate (DFF).
     """
     series_ids = [
-        "DGS10", "DGS2", "DFII10", "WALCL", "WDTGAL", "RRPONTSYD", "WRBWFRBL", "BAMLH0A0HYM2", "FEDFUNDS",
+        "DGS10", "DGS2", "DFII10", "WALCL", "WDTGAL", "RRPONTSYD", "WRBWFRBL", "BAMLH0A0HYM2", 
+        "DFEDTARU", "DFEDTARL", "DFF", "FEDFUNDS",
         "DGS1MO", "DGS3MO", "DGS6MO", "DGS1"
     ]
     results = {}
@@ -83,8 +85,22 @@ def get_fred_series_all():
             except Exception as e:
                 print(f"FRED CSV request failed for {sid}: {e}")
 
+        # Fallback to previous data if network failed
+        if not data and prev_data:
+            cached_hist = None
+            if sid == "DGS10" and prev_data.get("rates", {}).get("us10y", {}).get("history"):
+                cached_hist = prev_data["rates"]["us10y"]["history"]
+            elif sid == "DGS2" and prev_data.get("rates", {}).get("us2y", {}).get("history"):
+                cached_hist = prev_data["rates"]["us2y"]["history"]
+            elif sid == "DFII10" and prev_data.get("rates", {}).get("us10y_real", {}).get("history"):
+                cached_hist = prev_data["rates"]["us10y_real"]["history"]
+            elif sid == "BAMLH0A0HYM2" and prev_data.get("traditional_risk", {}).get("hy_spread", {}).get("history"):
+                cached_hist = prev_data["traditional_risk"]["hy_spread"]["history"]
+            if cached_hist:
+                data = cached_hist
+
         results[sid] = data
-        time.sleep(0.15)  # brief pause to respect rate limits
+        time.sleep(0.12)  # pause to respect rate limits
 
     return results
 
@@ -113,11 +129,28 @@ def calc_changes(series, lookbacks=(1, 7, 30)):
             pcts[lb] = None
     return curr, pcts, diffs
 
+def calc_rolling_corr(series_a, series_b, window=30):
+    """
+    Computes Pearson correlation coefficient between two time-series aligned on 'date'.
+    """
+    if not series_a or not series_b:
+        return None
+    df_a = pd.DataFrame(series_a).rename(columns={"value": "a"})
+    df_b = pd.DataFrame(series_b).rename(columns={"value": "b"})
+    merged = pd.merge(df_a, df_b, on="date").sort_values("date").dropna()
+    if len(merged) < min(10, window // 2):
+        return None
+    tail_df = merged.tail(window)
+    if len(tail_df) < 5 or tail_df["a"].std() == 0 or tail_df["b"].std() == 0:
+        return None
+    corr = tail_df["a"].corr(tail_df["b"])
+    return round(float(corr), 3) if pd.notnull(corr) else None
+
 def get_crypto_sentiment(prev_data=None):
     url = "https://api.alternative.me/fng/?limit=90"
     for attempt in range(2):
         try:
-            res = requests.get(url, headers=DEFAULT_HEADERS, timeout=5)
+            res = requests.get(url, headers=DEFAULT_HEADERS, timeout=8)
             res.raise_for_status()
             data = res.json().get("data", [])
             if not data:
@@ -146,7 +179,7 @@ def get_crypto_sentiment(prev_data=None):
                 "status": "ok",
                 "history": history
             }
-        except Exception as e:
+        except Exception:
             time.sleep(0.5)
 
     # Fallback to previous data if network is down
@@ -155,24 +188,19 @@ def get_crypto_sentiment(prev_data=None):
         cached["status"] = "stale"
         cached["stale_label"] = f"Stale · Last recorded {cached.get('updated', 'earlier')}"
         return cached
-    elif prev_data and "crypto_sentiment" in prev_data and prev_data["crypto_sentiment"].get("current"):
-        old_c = prev_data["crypto_sentiment"]["current"]
-        return {
-            "current": old_c.get("value"),
-            "classification": old_c.get("classification"),
-            "change_1d": 0,
-            "change_7d": 0,
-            "change_30d": 0,
-            "updated": old_c.get("date"),
-            "frequency": "Daily",
-            "source": "Alternative.me",
-            "status": "stale",
-            "stale_label": f"Stale · {old_c.get('date')}",
-            "history": prev_data["crypto_sentiment"].get("history", [])
-        }
-    return None
+    return {
+        "current": None,
+        "classification": "Unavailable",
+        "change_1d": None,
+        "change_7d": None,
+        "change_30d": None,
+        "updated": None,
+        "frequency": "Daily",
+        "source": "Alternative.me",
+        "status": "unavailable"
+    }
 
-def fetch_single_ticker(key, primary_symbol, fallback_symbol=None):
+def fetch_single_ticker(key, primary_symbol, fallback_symbol, provider_name, venue_name, prev_data=None):
     for sym in [primary_symbol, fallback_symbol]:
         if not sym:
             continue
@@ -196,52 +224,79 @@ def fetch_single_ticker(key, primary_symbol, fallback_symbol=None):
             
             return key, {
                 "symbol": sym,
+                "provider": provider_name,
+                "venue": venue_name,
                 "current": curr,
                 "change_1d": c1d,
                 "change_7d": c7d,
                 "change_30d": c30d,
                 "percentile_1y": p1y,
                 "updated": dates[-1],
-                "frequency": "Intraday" if key in ("BTC", "DXY") else "Daily",
-                "source": "Exchange (CBOE/CME/NYBOT)",
+                "frequency": "Daily",
+                "source": f"{provider_name} ({sym})",
                 "status": "ok",
                 "history": history[-90:]
             }
         except Exception as e:
             print(f"Error fetching ticker {sym}: {e}")
-    return key, None
 
-def get_market_assets():
-    tickers = {
-        "BTC": ("BTC-USD", None),
-        "DXY": ("DX-Y.NYB", None),
-        "SPX": ("^GSPC", "SPY"),
-        "NASDAQ": ("^NDX", "^IXIC"),
-        "VIX": ("^VIX", None),
-        "GOLD": ("GC=F", None),
-        "CRUDE_OIL": ("CL=F", None)
+    # Fallback to cache if available
+    if prev_data:
+        for section in ["overview", "traditional_risk", "commodities"]:
+            if section in prev_data and key.lower() in prev_data[section]:
+                cached = prev_data[section][key.lower()]
+                cached["status"] = "stale"
+                cached["frequency"] = "Daily"
+                cached["source"] = f"{provider_name} ({primary_symbol})"
+                cached["stale_label"] = f"Stale · {cached.get('updated', 'earlier')}"
+                return key, cached
+
+    return key, {
+        "symbol": primary_symbol,
+        "provider": provider_name,
+        "venue": venue_name,
+        "current": None,
+        "change_1d": None,
+        "change_7d": None,
+        "change_30d": None,
+        "percentile_1y": None,
+        "updated": None,
+        "frequency": "Daily",
+        "source": f"{provider_name} ({primary_symbol})",
+        "status": "unavailable"
+    }
+
+def get_market_assets(prev_data=None):
+    # Precise venue, provider and symbol configuration (no generic labels)
+    ticker_configs = {
+        "BTC": ("BTC-USD", None, "Yahoo Finance", "Crypto Spot"),
+        "DXY": ("DX-Y.NYB", None, "ICE / Yahoo", "US Dollar Index"),
+        "SPX": ("^GSPC", "SPY", "S&P Dow Jones / Yahoo", "S&P 500 Index"),
+        "NASDAQ": ("^NDX", "^IXIC", "Nasdaq / Yahoo", "Nasdaq 100 Index"),
+        "VIX": ("^VIX", None, "CBOE / Yahoo", "CBOE Volatility Index"),
+        "GOLD": ("GC=F", None, "COMEX / Yahoo", "COMEX Gold Futures"),
+        "CRUDE_OIL": ("CL=F", None, "NYMEX / Yahoo", "NYMEX WTI Crude Futures")
     }
     results = {}
-    for k, (pri, fb) in tickers.items():
-        _, res = fetch_single_ticker(k, pri, fb)
+    for k, (pri, fb, prov, ven) in ticker_configs.items():
+        _, res = fetch_single_ticker(k, pri, fb, prov, ven, prev_data)
         results[k] = res
     return results
 
-def get_btc_etf_flows():
+def get_btc_etf_flows(prev_data=None):
     url = "https://farside.co.uk/bitcoin-etf-flow-all-data/"
     try:
         if HAS_CURL_CFFI:
-            res = cffi_requests.get(url, impersonate="chrome", timeout=25)
+            res = cffi_requests.get(url, impersonate="chrome", timeout=20)
             html = res.text
         else:
-            res = requests.get(url, headers=DEFAULT_HEADERS, timeout=25)
+            res = requests.get(url, headers=DEFAULT_HEADERS, timeout=20)
             html = res.text
 
         soup = BeautifulSoup(html, "html.parser")
         table = soup.find("table")
         if not table:
-            print("Warning: Farside ETF table not found.")
-            return None
+            raise ValueError("Farside ETF table not found.")
 
         rows = []
         for tr in table.find_all("tr"):
@@ -250,7 +305,7 @@ def get_btc_etf_flows():
                 rows.append(cells)
 
         if not rows:
-            return None
+            raise ValueError("Farside table empty.")
 
         header = rows[0]
         total_idx = -1
@@ -315,11 +370,13 @@ def get_btc_etf_flows():
             })
 
         if not daily_flows:
-            return None
+            raise ValueError("No valid daily ETF flow records parsed.")
 
-        active_flows = [f for f in daily_flows if f["value"] != 0.0]
-        latest_flow = active_flows[-1] if active_flows else daily_flows[-1]
+        # Correct logic: DO NOT drop 0.0 net flows! 0.0 is legitimate flow data.
+        # Latest trading day is simply the last parsed row in chronological order.
+        latest_flow = daily_flows[-1]
         
+        # Valid trading days accumulation
         flow_7d = sum(f["value"] for f in daily_flows[-7:])
         flow_30d = sum(f["value"] for f in daily_flows[-30:])
 
@@ -342,10 +399,28 @@ def get_btc_etf_flows():
             "status": "ok"
         }
     except Exception as e:
-        print(f"Error fetching BTC ETF flows: {e}")
-        return None
+        print(f"Error or timeout fetching BTC ETF flows: {e}")
+        if prev_data and "overview" in prev_data and prev_data["overview"].get("btc_etf_flow"):
+            cached = prev_data["overview"]["btc_etf_flow"]
+            cached["status"] = "stale"
+            cached["stale_label"] = f"Stale · {cached.get('updated', 'earlier')}"
+            return cached
+        return {
+            "today_net_mil": None,
+            "today_date": None,
+            "flow_7d_mil": None,
+            "flow_7d_bil": None,
+            "flow_30d_mil": None,
+            "flow_30d_bil": None,
+            "latest_breakdown": {"ibit": None, "fbtc": None, "gbtc": None},
+            "history_30d": [],
+            "updated": None,
+            "frequency": "Daily (T+1)",
+            "source": "Farside Investors",
+            "status": "unavailable"
+        }
 
-def get_stablecoins_data():
+def get_stablecoins_data(prev_data=None):
     try:
         url_pegged = "https://stablecoins.llama.fi/stablecoins?includePrices=true"
         res_p = requests.get(url_pegged, headers=DEFAULT_HEADERS, timeout=15)
@@ -372,7 +447,7 @@ def get_stablecoins_data():
             daily_totals.append({"date": dt, "value": round(circ_usd / 1e9, 2)})
 
         if not daily_totals:
-            return None
+            raise ValueError("No stablecoin chart data.")
 
         curr = daily_totals[-1]["value"]
         d7 = daily_totals[-8]["value"] if len(daily_totals) >= 8 else daily_totals[0]["value"]
@@ -383,6 +458,10 @@ def get_stablecoins_data():
         c30d = round(((curr - d30) / d30) * 100, 2) if d30 else 0.0
         c90d = round(((curr - d90) / d90) * 100, 2) if d90 else 0.0
 
+        # Issuance change in Billions
+        net_issuance_7d = round(curr - d7, 2)
+        net_issuance_30d = round(curr - d30, 2)
+
         return {
             "total_mcap_bil": curr,
             "usdt_mcap_bil": usdt_mcap,
@@ -390,6 +469,8 @@ def get_stablecoins_data():
             "change_7d": c7d,
             "change_30d": c30d,
             "change_90d": c90d,
+            "net_issuance_7d_bil": net_issuance_7d,
+            "net_issuance_30d_bil": net_issuance_30d,
             "history": daily_totals[-90:],
             "updated": daily_totals[-1]["date"],
             "frequency": "Daily",
@@ -398,9 +479,26 @@ def get_stablecoins_data():
         }
     except Exception as e:
         print(f"Error fetching stablecoins data: {e}")
-        return None
+        if prev_data and "crypto_capital_flow" in prev_data and prev_data["crypto_capital_flow"].get("stablecoins"):
+            cached = prev_data["crypto_capital_flow"]["stablecoins"]
+            cached["status"] = "stale"
+            cached["stale_label"] = f"Stale · {cached.get('updated', 'earlier')}"
+            return cached
+        return {
+            "total_mcap_bil": None,
+            "usdt_mcap_bil": None,
+            "usdc_mcap_bil": None,
+            "change_7d": None,
+            "change_30d": None,
+            "change_90d": None,
+            "history": [],
+            "updated": None,
+            "frequency": "Daily",
+            "source": "DefiLlama",
+            "status": "unavailable"
+        }
 
-def get_crypto_leverage():
+def get_crypto_leverage(prev_data=None):
     leverage = {
         "funding_rate": None,
         "open_interest": None,
@@ -418,8 +516,9 @@ def get_crypto_leverage():
         }
     }
 
+    # 1. Binance Funding Rate
     try:
-        res = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT", headers=DEFAULT_HEADERS, timeout=10)
+        res = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT", headers=DEFAULT_HEADERS, timeout=8)
         if res.status_code == 200:
             d = res.json()
             rate_8h = float(d.get("lastFundingRate", 0.0))
@@ -433,19 +532,27 @@ def get_crypto_leverage():
                 heat = "Normal"
 
             leverage["funding_rate"] = {
+                "venue": "Binance BTCUSDT Perpetual",
                 "rate_8h": round(rate_8h * 100, 4),
                 "annualized_pct": round(annualized, 2),
                 "heat": heat,
                 "updated": datetime.fromtimestamp(int(d.get("time", 0)) / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-                "frequency": "8 Hours",
-                "source": "Binance Futures",
+                "frequency": "8-Hour Funding",
+                "source": "Binance Futures (BTCUSDT)",
                 "status": "ok"
             }
     except Exception as e:
         print(f"Error fetching Binance funding rate: {e}")
+        if prev_data and prev_data.get("crypto_leverage", {}).get("funding_rate"):
+            cached = prev_data["crypto_leverage"]["funding_rate"]
+            cached["status"] = "stale"
+            cached["source"] = "Binance Futures (BTCUSDT)"
+            cached["venue"] = "Binance BTCUSDT Perpetual"
+            leverage["funding_rate"] = cached
 
+    # 2. Binance Open Interest
     try:
-        res_hist = requests.get("https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=1d&limit=31", headers=DEFAULT_HEADERS, timeout=10)
+        res_hist = requests.get("https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=1d&limit=31", headers=DEFAULT_HEADERS, timeout=8)
         if res_hist.status_code == 200:
             items = res_hist.json()
             if items:
@@ -460,6 +567,7 @@ def get_crypto_leverage():
                 c7d = round(((curr - history[-8]["value"]) / history[-8]["value"]) * 100, 2) if len(history) > 7 else 0.0
 
                 leverage["open_interest"] = {
+                    "venue": "Binance BTC Futures OI",
                     "total_usd_bil": curr,
                     "total_btc": history[-1]["btc"],
                     "change_24h": c24h,
@@ -467,12 +575,19 @@ def get_crypto_leverage():
                     "history": history,
                     "updated": history[-1]["date"],
                     "frequency": "Daily",
-                    "source": "Binance Futures",
+                    "source": "Binance Futures (BTC)",
                     "status": "ok"
                 }
     except Exception as e:
         print(f"Error fetching Binance Open Interest: {e}")
+        if prev_data and prev_data.get("crypto_leverage", {}).get("open_interest"):
+            cached = prev_data["crypto_leverage"]["open_interest"]
+            cached["status"] = "stale"
+            cached["source"] = "Binance Futures (BTC)"
+            cached["venue"] = "Binance BTC Futures OI"
+            leverage["open_interest"] = cached
 
+    # 3. CoinGlass Liquidations
     if COINGLASS_API_KEY:
         try:
             cg_headers = {"CG-API-KEY": COINGLASS_API_KEY}
@@ -496,91 +611,324 @@ def get_crypto_leverage():
 
     return leverage
 
-def build_macro_regime(usd_pct_30d, dxy_p1y, real_yield_change_30d, liq_proxy_change_30d, 
-                       spx_change_30d, vix_curr, hy_spread_curr, hy_change_1m, 
-                       etf_flow_7d, funding_annualized, oi_change_7d):
-    usd_state = "Strong" if (usd_pct_30d is not None and usd_pct_30d > 0) or (dxy_p1y is not None and dxy_p1y > 60) else "Weak"
-    real_yield_state = "Rising" if (real_yield_change_30d is not None and real_yield_change_30d > 0) else "Falling"
-    liquidity_state = "Expanding" if (liq_proxy_change_30d is not None and liq_proxy_change_30d > 0) else "Contracting"
-    equities_state = "Risk-On" if (spx_change_30d is not None and spx_change_30d >= 0 and vix_curr is not None and vix_curr < 20) else "Risk-Off"
-    credit_state = "Healthy" if (hy_spread_curr is not None and hy_spread_curr < 3.5 and (hy_change_1m is None or hy_change_1m <= 0)) else "Stress"
-    etf_state = "Inflow" if (etf_flow_7d is not None and etf_flow_7d > 0) else "Outflow"
-    
-    if funding_annualized is not None and funding_annualized > 15.0 or (oi_change_7d is not None and oi_change_7d > 15.0):
-        leverage_state = "Elevated"
-    elif funding_annualized is not None and funding_annualized < 4.0:
-        leverage_state = "Low"
-    else:
-        leverage_state = "Normal"
+def build_macro_regime(dxy_data, us10y_real, us_liquidity_proxy, spx_data, vix_data, 
+                       hy_spread, etf_flows, crypto_leverage):
+    """
+    Multi-dimensional Macro Regime Evaluation:
+    Combines Level (Percentile), Trend (30D/7D Momentum), and Stress/State.
+    CRITICAL FIX: None is NEVER evaluated as 'Normal'!
+    """
+    # 1. USD State (Level + Trend)
+    dxy_curr = dxy_data.get("current") if dxy_data else None
+    dxy_p1y = dxy_data.get("percentile_1y") if dxy_data else None
+    dxy_c30 = dxy_data.get("change_30d") if dxy_data else None
 
-    return {
-        "usd": usd_state,
-        "real_yield": real_yield_state,
-        "liquidity": liquidity_state,
-        "equities": equities_state,
-        "credit": credit_state,
-        "btc_etf_flow": etf_state,
-        "crypto_leverage": leverage_state
+    if dxy_curr is None:
+        usd_dim = {"state": "Unavailable", "level": "Unknown", "trend": "Unknown", "percentile_1y": None}
+    else:
+        lvl = "High" if (dxy_p1y and dxy_p1y >= 65) else ("Low" if (dxy_p1y and dxy_p1y <= 35) else "Normal")
+        tr = "Rising" if (dxy_c30 and dxy_c30 > 0.8) else ("Falling" if (dxy_c30 and dxy_c30 < -0.8) else "Stable")
+        if lvl == "High" or (tr == "Rising" and lvl != "Low"):
+            state = "Strong"
+        elif lvl == "Low" or (tr == "Falling" and lvl != "High"):
+            state = "Weak"
+        else:
+            state = "Neutral"
+        usd_dim = {"state": state, "level": lvl, "trend": tr, "percentile_1y": dxy_p1y, "change_30d": dxy_c30}
+
+    # 2. 10Y Real Yield (Level + Trend + Stress)
+    ry_curr = us10y_real.get("current") if us10y_real else None
+    ry_p1y = us10y_real.get("percentile_1y") if us10y_real else None
+    ry_c30_bp = us10y_real.get("change_30d_bp") if us10y_real else None
+
+    if ry_curr is None:
+        ry_dim = {"state": "Unavailable", "level": "Unknown", "trend": "Unknown", "stress": "Unknown"}
+    else:
+        lvl = "High" if (ry_p1y and ry_p1y >= 65) else ("Low" if (ry_p1y and ry_p1y <= 35) else "Normal")
+        tr = "Rising" if (ry_c30_bp and ry_c30_bp > 8) else ("Falling" if (ry_c30_bp and ry_c30_bp < -8) else "Stable")
+        stress = "High" if (lvl == "High" and tr == "Rising") else ("Low" if tr == "Falling" else "Medium")
+        state = "Rising" if tr == "Rising" else ("Falling" if tr == "Falling" else "Stable")
+        ry_dim = {"state": state, "level": lvl, "trend": tr, "stress": stress, "percentile_1y": ry_p1y}
+
+    # 3. US Net Liquidity Proxy (Trend + Magnitude)
+    liq_c30 = us_liquidity_proxy.get("change_30d") if us_liquidity_proxy else None
+    if liq_c30 is None:
+        liq_dim = {"state": "Unavailable", "trend": "Unknown", "stress": "Unknown"}
+    else:
+        state = "Expanding" if liq_c30 > 0.4 else ("Contracting" if liq_c30 < -0.4 else "Neutral")
+        liq_dim = {"state": state, "trend": state, "change_30d": liq_c30}
+
+    # 4. TradFi Equities & Volatility (SPX Trend + VIX Level & Spike)
+    spx_c30 = spx_data.get("change_30d") if spx_data else None
+    vix_curr = vix_data.get("current") if vix_data else None
+    vix_c30 = vix_data.get("change_30d") if vix_data else None
+
+    if spx_c30 is None or vix_curr is None:
+        eq_dim = {"state": "Unavailable", "risk": "Unknown", "vix_level": "Unknown"}
+    else:
+        # Avoid static VIX < 20 assumption: check if VIX spiked recently or elevated
+        vix_spiking = vix_c30 is not None and vix_c30 > 25.0
+        if vix_curr < 18.5 and not vix_spiking and (spx_c30 is not None and spx_c30 >= -0.5):
+            state = "Risk-On"
+        elif vix_curr > 23.0 or vix_spiking or (spx_c30 is not None and spx_c30 < -2.5):
+            state = "Risk-Off"
+        else:
+            state = "Neutral"
+        eq_dim = {"state": state, "vix_current": vix_curr, "vix_spike": vix_spiking, "spx_change_30d": spx_c30}
+
+    # 5. Credit Market (HY Spread OAS Level + Trend)
+    hy_curr = hy_spread.get("current") if hy_spread else None
+    hy_c1m_bp = hy_spread.get("change_1m_bp") if hy_spread else None
+    hy_p1y = hy_spread.get("percentile_1y") if hy_spread else None
+
+    if hy_curr is None:
+        credit_dim = {"state": "Unavailable", "level": "Unknown", "stress": "Unknown"}
+    else:
+        # FRED ICE BofA HY OAS: historical normal ~3.2% - 4.5%. Currently ~2.7% is tight.
+        widening = hy_c1m_bp is not None and hy_c1m_bp > 25.0
+        if hy_curr < 3.4 and not widening:
+            state = "Healthy"
+        elif hy_curr > 4.2 or widening:
+            state = "Stress"
+        else:
+            state = "Neutral"
+        credit_dim = {"state": state, "current_spread": hy_curr, "widening": widening, "percentile_1y": hy_p1y}
+
+    # 6. BTC ETF Capital Flow
+    etf_7d = etf_flows.get("flow_7d_mil") if etf_flows else None
+    etf_30d = etf_flows.get("flow_30d_mil") if etf_flows else None
+    if etf_7d is None:
+        etf_dim = {"state": "Unavailable", "flow_7d_mil": None}
+    else:
+        state = "Inflow" if etf_7d > 50.0 else ("Outflow" if etf_7d < -50.0 else "Neutral")
+        etf_dim = {"state": state, "flow_7d_mil": etf_7d, "flow_30d_mil": etf_30d}
+
+    # 7. Crypto Leverage (CRITICAL P0 FIX: None -> Unavailable, NEVER Normal!)
+    funding = crypto_leverage.get("funding_rate") if crypto_leverage else None
+    oi = crypto_leverage.get("open_interest") if crypto_leverage else None
+
+    funding_ann = funding.get("annualized_pct") if (funding and funding.get("status") == "ok") else None
+    oi_c7 = oi.get("change_7d") if (oi and oi.get("status") == "ok") else None
+
+    if funding_ann is None and oi_c7 is None:
+        # Data is genuinely missing/unavailable -> NEVER label as Normal!
+        lev_state = "Unavailable"
+        lev_heat = "Unknown"
+    elif funding_ann is not None and (funding_ann > 15.0 or (oi_c7 is not None and oi_c7 > 15.0)):
+        lev_state = "Elevated"
+        lev_heat = "Elevated"
+    elif funding_ann is not None and funding_ann < 3.0:
+        lev_state = "Low"
+        lev_heat = "Low"
+    else:
+        lev_state = "Normal"
+        lev_heat = "Normal"
+
+    lev_dim = {
+        "state": lev_state,
+        "heat": lev_heat,
+        "funding_annualized": funding_ann,
+        "oi_change_7d": oi_c7,
+        "status": "ok" if (funding_ann is not None or oi_c7 is not None) else "unavailable"
     }
 
-def detect_market_divergence(regime, btc_change_7d, btc_change_30d, dxy_change_30d, 
-                             nasdaq_change_30d, real_yield_change_30d, etf_flow_7d, 
-                             oi_change_7d, funding_annualized, hy_spread_curr):
+    # Synthesize concise institutional macro summary line
+    summary_parts = []
+    if liq_dim["state"] != "Unavailable":
+        summary_parts.append(f"{liq_dim['state']} Liquidity")
+    if usd_dim["state"] != "Unavailable":
+        summary_parts.append(f"{usd_dim['state']} USD")
+    if ry_dim["state"] != "Unavailable":
+        summary_parts.append(f"{ry_dim['state']} Real Yield")
+    if credit_dim["state"] != "Unavailable":
+        summary_parts.append(f"{credit_dim['state']} Credit")
+    if eq_dim["state"] != "Unavailable":
+        summary_parts.append(f"{eq_dim['state']} Equities")
+    summary_parts.append(f"ETF {etf_dim['state']}")
+    summary_parts.append(f"Leverage {lev_dim['state']}")
+    regime_summary = " · ".join(summary_parts)
+
+    return {
+        # Backward-compatible top-level keys
+        "usd": usd_dim["state"],
+        "real_yield": ry_dim["state"],
+        "liquidity": liq_dim["state"],
+        "equities": eq_dim["state"],
+        "credit": credit_dim["state"],
+        "btc_etf_flow": etf_dim["state"],
+        "crypto_leverage": lev_dim["state"],
+        "summary": regime_summary,
+        # Multi-dimensional indicators
+        "dimensions": {
+            "usd": usd_dim,
+            "real_yield": ry_dim,
+            "liquidity": liq_dim,
+            "equities": eq_dim,
+            "credit": credit_dim,
+            "btc_etf_flow": etf_dim,
+            "crypto_leverage": lev_dim
+        }
+    }
+
+def detect_market_divergence(regime, btc_data, dxy_data, nasdaq_data, us10y_real, 
+                             gold_data, etf_flows, crypto_leverage, hy_spread):
+    """
+    Rigorously detects Directional Divergence, Correlation Shifts, and Flow Divergences.
+    Includes rolling 30D and 90D Pearson correlation metrics.
+    """
     cases = []
     
-    # Case A: DXY ↑, Real Yield ↑, Nasdaq ↓, BTC ↑
-    if (dxy_change_30d is not None and dxy_change_30d > 0) and \
-       (real_yield_change_30d is not None and real_yield_change_30d > 0) and \
-       (nasdaq_change_30d is not None and nasdaq_change_30d < 0) and \
-       (btc_change_30d is not None and btc_change_30d > 0):
+    # Extract histories for rolling correlation
+    btc_hist = btc_data.get("history", []) if btc_data else []
+    dxy_hist = dxy_data.get("history", []) if dxy_data else []
+    ndx_hist = nasdaq_data.get("history", []) if nasdaq_data else []
+    ry_hist = us10y_real.get("history", []) if us10y_real else []
+    gold_hist = gold_data.get("history", []) if gold_data else []
+
+    # Calculate actual rolling correlations
+    corr_btc_ndx_30d = calc_rolling_corr(btc_hist, ndx_hist, 30)
+    corr_btc_ndx_90d = calc_rolling_corr(btc_hist, ndx_hist, 90)
+    corr_btc_dxy_30d = calc_rolling_corr(btc_hist, dxy_hist, 30)
+    corr_btc_dxy_90d = calc_rolling_corr(btc_hist, dxy_hist, 90)
+    corr_btc_ry_30d = calc_rolling_corr(btc_hist, ry_hist, 30)
+    corr_btc_ry_90d = calc_rolling_corr(btc_hist, ry_hist, 90)
+    corr_btc_gold_30d = calc_rolling_corr(btc_hist, gold_hist, 30)
+    corr_btc_gold_90d = calc_rolling_corr(btc_hist, gold_hist, 90)
+
+    correlations = {
+        "btc_nasdaq": {"corr_30d": corr_btc_ndx_30d, "corr_90d": corr_btc_ndx_90d},
+        "btc_dxy": {"corr_30d": corr_btc_dxy_30d, "corr_90d": corr_btc_dxy_90d},
+        "btc_real_yield": {"corr_30d": corr_btc_ry_30d, "corr_90d": corr_btc_ry_90d},
+        "btc_gold": {"corr_30d": corr_btc_gold_30d, "corr_90d": corr_btc_gold_90d}
+    }
+
+    btc_c7d = btc_data.get("change_7d") if btc_data else None
+    btc_c30d = btc_data.get("change_30d") if btc_data else None
+    dxy_c30d = dxy_data.get("change_30d") if dxy_data else None
+    ndx_c30d = nasdaq_data.get("change_30d") if nasdaq_data else None
+    ry_c30d_bp = us10y_real.get("change_30d_bp") if us10y_real else None
+    etf_7d = etf_flows.get("flow_7d_mil") if etf_flows else None
+    hy_curr = hy_spread.get("current") if hy_spread else None
+
+    funding = crypto_leverage.get("funding_rate") if crypto_leverage else None
+    oi = crypto_leverage.get("open_interest") if crypto_leverage else None
+    funding_ann = funding.get("annualized_pct") if (funding and funding.get("status") == "ok") else None
+    oi_c7 = oi.get("change_7d") if (oi and oi.get("status") == "ok") else None
+
+    # Check 1: Correlation Regime Shift (Statistical decorrelation)
+    if corr_btc_ndx_30d is not None and corr_btc_ndx_90d is not None:
+        if corr_btc_ndx_90d > 0.4 and corr_btc_ndx_30d < 0.05:
+            cases.append({
+                "case_id": "Shift-Corr",
+                "type": "Correlation Regime Shift",
+                "name": "BTC / Tech Equity Decorrelation",
+                "message": f"Rolling 30D correlation between BTC and Nasdaq dropped from +{corr_btc_ndx_90d} (90D) to {corr_btc_ndx_30d}, demonstrating statistical decorrelation from traditional tech equities."
+            })
+
+    # Check 2: Directional Divergence (Asset Class divergence, not yet statistical decorrelation)
+    if (dxy_c30d is not None and dxy_c30d > 0.5) and \
+       (ry_c30d_bp is not None and ry_c30d_bp > 5) and \
+       (ndx_c30d is not None and ndx_c30d < -1.0) and \
+       (btc_c30d is not None and btc_c30d > 2.0):
         cases.append({
             "case_id": "Case A",
-            "name": "Asset Class Divergence",
-            "message": "BTC is diverging from traditional risk assets (showing decorrelation and idiosyncratic capital absorption despite dollar and real yield headwinds)."
+            "type": "Directional Divergence",
+            "name": "Macro Headwind Absorption",
+            "message": "BTC is exhibiting positive directional divergence, absorbing capital despite USD strengthening and real yields rising."
         })
 
-    # Case B: DXY ↓, Real Yield ↓, ETF Flow ↑, BTC ↑
-    if (dxy_change_30d is not None and dxy_change_30d < 0) and \
-       (real_yield_change_30d is not None and real_yield_change_30d < 0) and \
-       (etf_flow_7d is not None and etf_flow_7d > 0) and \
-       (btc_change_7d is not None and btc_change_7d > 0):
+    # Check 3: Macro & Spot Flow Alignment
+    if (dxy_c30d is not None and dxy_c30d < 0) and \
+       (ry_c30d_bp is not None and ry_c30d_bp < 0) and \
+       (etf_7d is not None and etf_7d > 100) and \
+       (btc_c7d is not None and btc_c7d > 0):
         cases.append({
             "case_id": "Case B",
-            "name": "Macro & Spot Flow Alignment",
-            "message": "Macro liquidity tailwinds and institutional spot ETF capital flows are strongly aligned in supporting crypto assets."
+            "type": "Regime Alignment",
+            "name": "Macro & ETF Spot Alignment",
+            "message": "Macro liquidity easing (USD/Real Yield drop) and institutional spot ETF net inflows are mutually aligned in supporting crypto assets."
         })
 
-    # Case C: BTC ↑, ETF Flow ↓, OI ↑, Funding ↑
-    if (btc_change_7d is not None and btc_change_7d > 0) and \
-       (etf_flow_7d is not None and etf_flow_7d < 0) and \
-       (oi_change_7d is not None and oi_change_7d > 5) and \
-       (funding_annualized is not None and funding_annualized > 10):
+    # Check 4: Leverage vs Spot Flow Divergence
+    if (btc_c7d is not None and btc_c7d > 0) and \
+       (etf_7d is not None and etf_7d < -50) and \
+       (oi_c7 is not None and oi_c7 > 5) and \
+       (funding_ann is not None and funding_ann > 10):
         cases.append({
             "case_id": "Case C",
+            "type": "Flow Divergence",
             "name": "Leverage vs Spot Flow Divergence",
-            "message": "BTC upside is accompanied by increasing derivatives leverage while spot ETF net flow is weakening (fragile leverage-driven structure)."
+            "message": "BTC price upside is accompanied by escalating derivatives leverage while spot ETF net flow is negative (fragile leverage-driven structure)."
         })
 
-    # Case D: Credit spread widening while risk assets expand
-    if (hy_spread_curr is not None and hy_spread_curr > 3.8) and \
-       (nasdaq_change_30d is not None and nasdaq_change_30d > 2):
+    # Check 5: Credit vs Equity Divergence
+    if (hy_curr is not None and hy_curr > 3.8) and \
+       (ndx_c30d is not None and ndx_c30d > 2.0):
         cases.append({
             "case_id": "Case D",
+            "type": "TradFi Credit Divergence",
             "name": "Credit vs Equity Divergence",
-            "message": "High yield credit spreads indicate underlying financial stress while equity indices remain buoyant."
+            "message": "High yield credit spreads indicate growing corporate financial stress while equity indices remain buoyant."
         })
 
     if not cases:
         cases.append({
             "case_id": "Neutral",
+            "type": "Regime Congruence",
             "name": "Regime Congruence",
             "message": "Cross-asset relationships and liquidity indicators are operating within standard historical correlation bands without acute divergence."
         })
 
-    return cases
+    return {
+        "cases": cases,
+        "correlations": correlations
+    }
+
+def build_data_quality_report(tracked_indicators):
+    """
+    Rigorously computes live data availability, stale count, and missing indicators.
+    Replaces static/fake '100% Live Sync' with actual operational metrics.
+    """
+    total = len(tracked_indicators)
+    available_cnt = 0
+    stale_cnt = 0
+    unavailable_cnt = 0
+
+    metric_details = []
+    for ind in tracked_indicators:
+        status = ind.get("status", "unavailable")
+        if status == "ok":
+            available_cnt += 1
+        elif status == "stale":
+            stale_cnt += 1
+            available_cnt += 1  # count as degraded available
+        else:
+            unavailable_cnt += 1
+
+        metric_details.append({
+            "name": ind.get("name"),
+            "category": ind.get("category"),
+            "status": status,
+            "frequency": ind.get("frequency", "Daily"),
+            "source": ind.get("source", "Official"),
+            "updated": ind.get("updated")
+        })
+
+    pct = round((available_cnt / total) * 100, 1) if total > 0 else 0.0
+
+    return {
+        "total_metrics": total,
+        "available_count": available_cnt,
+        "stale_count": stale_cnt,
+        "unavailable_count": unavailable_cnt,
+        "availability_pct": pct,
+        "summary": f"{available_cnt}/{total} Available ({pct}%)",
+        "health_state": "Optimal" if pct >= 90 else ("Operational" if pct >= 70 else "Degraded"),
+        "metrics": metric_details
+    }
 
 def main():
-    print("Starting Macro Daily Dashboard pipeline...")
+    print("Starting Macro Daily Dashboard pipeline (v2.1 Precision Upgrade)...")
     now_utc = datetime.now(timezone.utc)
 
     prev_data = {}
@@ -593,12 +941,12 @@ def main():
     
     # Run async thread pool for independent services
     with ThreadPoolExecutor(max_workers=6) as executor:
-        future_market = executor.submit(get_market_assets)
+        future_market = executor.submit(get_market_assets, prev_data)
         future_fng = executor.submit(get_crypto_sentiment, prev_data)
-        future_etf = executor.submit(get_btc_etf_flows)
-        future_stable = executor.submit(get_stablecoins_data)
-        future_lev = executor.submit(get_crypto_leverage)
-        future_fred = executor.submit(get_fred_series_all)
+        future_etf = executor.submit(get_btc_etf_flows, prev_data)
+        future_stable = executor.submit(get_stablecoins_data, prev_data)
+        future_lev = executor.submit(get_crypto_leverage, prev_data)
+        future_fred = executor.submit(get_fred_series_all, prev_data)
 
         market = future_market.result()
         crypto_fng = future_fng.result()
@@ -623,9 +971,14 @@ def main():
     rrp_obs = fred_data.get("RRPONTSYD", [])
     reserves_obs = fred_data.get("WRBWFRBL", [])
     hy_obs = fred_data.get("BAMLH0A0HYM2", [])
+    
+    # Official Fed Funds target range & effective rates
+    dfedtaru_obs = fred_data.get("DFEDTARU", [])
+    dfedtarl_obs = fred_data.get("DFEDTARL", [])
+    dff_obs = fred_data.get("DFF", [])
     fedfunds_obs = fred_data.get("FEDFUNDS", [])
 
-    # Process US 10Y
+    # 1. Process US 10Y
     u10y_curr, u10y_pct, u10y_diff = calc_changes(us10y_obs)
     us10y = {
         "current": u10y_curr,
@@ -635,12 +988,12 @@ def main():
         "percentile_1y": calc_percentile([o["value"] for o in us10y_obs[-260:]], u10y_curr) if us10y_obs else None,
         "updated": us10y_obs[-1]["date"] if us10y_obs else None,
         "frequency": "Daily",
-        "source": "FRED (Federal Reserve)",
+        "source": "FRED (U.S. Treasury DGS10)",
         "status": "ok" if us10y_obs else "unavailable",
         "history": us10y_obs[-90:] if us10y_obs else []
     }
 
-    # Process US 2Y
+    # 2. Process US 2Y
     u2y_curr, u2y_pct, u2y_diff = calc_changes(us2y_obs)
     us2y = {
         "current": u2y_curr,
@@ -650,12 +1003,12 @@ def main():
         "percentile_1y": calc_percentile([o["value"] for o in us2y_obs[-260:]], u2y_curr) if us2y_obs else None,
         "updated": us2y_obs[-1]["date"] if us2y_obs else None,
         "frequency": "Daily",
-        "source": "FRED (Federal Reserve)",
+        "source": "FRED (U.S. Treasury DGS2)",
         "status": "ok" if us2y_obs else "unavailable",
         "history": us2y_obs[-90:] if us2y_obs else []
     }
 
-    # Process 10Y-2Y Spread
+    # 3. Process 10Y-2Y Spread
     spread_obs = []
     if us10y_obs and us2y_obs:
         d2_map = {o["date"]: o["value"] for o in us2y_obs}
@@ -672,12 +1025,12 @@ def main():
         "change_30d_bp": sp_diff.get(30),
         "updated": spread_obs[-1]["date"] if spread_obs else None,
         "frequency": "Daily",
-        "source": "FRED / Calculated",
+        "source": "FRED / Calculated (10Y-2Y)",
         "status": "ok" if spread_obs else "unavailable",
         "history": spread_obs[-90:] if spread_obs else []
     }
 
-    # Process 10Y Real Yield (DFII10)
+    # 4. Process 10Y Real Yield (DFII10)
     dfii_curr, dfii_pct, dfii_diff = calc_changes(dfii10_obs)
     us10y_real = {
         "current": dfii_curr,
@@ -687,12 +1040,12 @@ def main():
         "percentile_1y": calc_percentile([o["value"] for o in dfii10_obs[-260:]], dfii_curr) if dfii10_obs else None,
         "updated": dfii10_obs[-1]["date"] if dfii10_obs else None,
         "frequency": "Daily",
-        "source": "FRED (Federal Reserve)",
+        "source": "FRED (10Y TIPS DFII10)",
         "status": "ok" if dfii10_obs else "unavailable",
         "history": dfii10_obs[-90:] if dfii10_obs else []
     }
 
-    # Process Fed Balance Sheet (WALCL)
+    # 5. Process Fed Balance Sheet (WALCL)
     fed_bs = None
     if walcl_obs:
         curr_walcl = walcl_obs[-1]["value"]
@@ -710,13 +1063,13 @@ def main():
             "change_6m": c6m,
             "change_yoy": cyoy,
             "updated": walcl_obs[-1]["date"],
-            "frequency": "Weekly",
-            "source": "Federal Reserve (H.4.1)",
+            "frequency": "Weekly (Wed / Rel Thu)",
+            "source": "Federal Reserve (H.4.1 WALCL)",
             "status": "ok",
             "history": [{"date": o["date"], "value": round(o["value"] / 1e6, 2)} for o in walcl_obs[-52:]]
         }
 
-    # Process TGA (WDTGAL)
+    # 6. Process TGA (WDTGAL)
     tga = None
     if wdtgal_obs:
         curr_tga = wdtgal_obs[-1]["value"]
@@ -730,12 +1083,12 @@ def main():
             "change_30d": c30d,
             "updated": wdtgal_obs[-1]["date"],
             "frequency": "Weekly",
-            "source": "U.S. Treasury / FRED",
+            "source": "U.S. Treasury / FRED (WDTGAL)",
             "status": "ok",
             "history": [{"date": o["date"], "value": round(o["value"] / 1000, 1)} for o in wdtgal_obs[-52:]]
         }
 
-    # Process RRP (RRPONTSYD)
+    # 7. Process RRP (RRPONTSYD)
     rrp = None
     if rrp_obs:
         curr_rrp = rrp_obs[-1]["value"]
@@ -749,12 +1102,12 @@ def main():
             "change_30d": c30d,
             "updated": rrp_obs[-1]["date"],
             "frequency": "Daily",
-            "source": "Federal Reserve (NY Fed / FRED)",
+            "source": "NY Fed / FRED (RRPONTSYD)",
             "status": "ok",
             "history": [{"date": o["date"], "value": round(o["value"], 2)} for o in rrp_obs[-90:]]
         }
 
-    # Process Bank Reserves (WRBWFRBL)
+    # 8. Process Bank Reserves (WRBWFRBL)
     bank_reserves = None
     if reserves_obs:
         curr_res = reserves_obs[-1]["value"]
@@ -765,13 +1118,13 @@ def main():
             "current_bil": curr_b,
             "change_30d": c30d,
             "updated": reserves_obs[-1]["date"],
-            "frequency": "Weekly",
-            "source": "Federal Reserve (FRED)",
+            "frequency": "Weekly (H.4.1)",
+            "source": "Federal Reserve (WRBWFRBL)",
             "status": "ok",
             "history": [{"date": o["date"], "value": round(o["value"] / 1000, 1)} for o in reserves_obs[-52:]]
         }
 
-    # Compute US Liquidity Proxy: Fed Balance Sheet - TGA - RRP
+    # 9. Compute US Net Liquidity Proxy: Fed Balance Sheet - TGA - RRP
     us_liquidity_proxy = None
     if walcl_obs and wdtgal_obs:
         tga_map = {o["date"]: o["value"] for o in wdtgal_obs}
@@ -793,19 +1146,21 @@ def main():
             c7d = round(((curr_liq - liq_history[-2]["value"]) / liq_history[-2]["value"]) * 100, 2) if n_l >= 2 else 0.0
             c30d = round(((curr_liq - liq_history[-5]["value"]) / liq_history[-5]["value"]) * 100, 2) if n_l >= 5 else 0.0
             us_liquidity_proxy = {
+                "name": "US Net Liquidity Proxy",
                 "current_tril": curr_liq,
                 "change_7d": c7d,
                 "change_30d": c30d,
-                "formula": "Fed Balance Sheet - TGA - RRP",
+                "formula": "Fed Balance Sheet (Weekly) - TGA (Weekly) - RRP (Daily)",
+                "note": "Market proxy for domestic dollar liquidity available to financial markets",
                 "is_derived": True,
                 "updated": liq_history[-1]["date"],
-                "frequency": "Weekly",
-                "source": "Derived (Fed + Treasury Data)",
+                "frequency": "Weekly (Wed snapshot)",
+                "source": "Derived (Fed + Treasury H.4.1)",
                 "status": "ok",
                 "history": liq_history[-52:]
             }
 
-    # Process High Yield Credit Spread
+    # 10. Process High Yield Credit Spread (BAMLH0A0HYM2)
     hy_spread = None
     if hy_obs:
         hy_curr, hy_pct, hy_diff = calc_changes(hy_obs)
@@ -818,73 +1173,147 @@ def main():
             "percentile_1y": calc_percentile([o["value"] for o in hy_obs[-260:]], hy_curr),
             "updated": hy_obs[-1]["date"],
             "frequency": "Daily",
-            "source": "ICE BofA / FRED",
+            "source": "ICE BofA / FRED (BAMLH0A0HYM2)",
             "status": "ok",
             "history": hy_obs[-90:]
         }
 
-    # Process Fed Funds
+    # 11. P0 FIX: Rigorous Federal Funds Rate (Target Range vs Effective Rate)
+    # Distinguishes FOMC Target Range (DFEDTARU, DFEDTARL) and Daily Effective Fed Funds Rate (DFF)
     fed_funds = None
-    if fedfunds_obs:
+    if dfedtaru_obs and dfedtarl_obs:
+        target_upper = dfedtaru_obs[-1]["value"]
+        target_lower = dfedtarl_obs[-1]["value"]
+        target_range = f"{target_lower:.2f}% - {target_upper:.2f}%"
+        target_date = dfedtaru_obs[-1]["date"]
+
+        # Check target change
+        target_change_bp = 0.0
+        if len(dfedtaru_obs) > 1:
+            prev_u = dfedtaru_obs[-2]["value"]
+            target_change_bp = round((target_upper - prev_u) * 100, 1)
+
+        dff_val = dff_obs[-1]["value"] if dff_obs else None
+        dff_date = dff_obs[-1]["date"] if dff_obs else None
+        monthly_val = fedfunds_obs[-1]["value"] if fedfunds_obs else None
+
         fed_funds = {
+            "target_upper": target_upper,
+            "target_lower": target_lower,
+            "target_range": target_range,
+            "target_updated": target_date,
+            "target_change_bp": target_change_bp,
+            "effective_rate": dff_val,
+            "effective_updated": dff_date,
+            "monthly_average": monthly_val,
+            "current": dff_val if dff_val is not None else target_upper,
+            "updated": target_date,
+            "frequency": "Daily / FOMC Decision",
+            "source": "Federal Reserve (FRED DFEDTARU / DFEDTARL / DFF)",
+            "status": "ok",
+            "history": [{"date": o["date"], "value": o["value"]} for o in dfedtaru_obs[-60:]]
+        }
+    elif fedfunds_obs:
+        # Fallback if target range series fail
+        fed_funds = {
+            "target_upper": None,
+            "target_lower": None,
+            "target_range": "--",
+            "target_updated": None,
+            "target_change_bp": None,
+            "effective_rate": fedfunds_obs[-1]["value"],
+            "effective_updated": fedfunds_obs[-1]["date"],
+            "monthly_average": fedfunds_obs[-1]["value"],
             "current": fedfunds_obs[-1]["value"],
             "updated": fedfunds_obs[-1]["date"],
             "frequency": "Monthly",
-            "source": "Federal Reserve",
+            "source": "Federal Reserve (FRED FEDFUNDS)",
             "status": "ok",
             "history": fedfunds_obs[-24:]
         }
 
-    # Process Treasury Bill Curve (Expected Rate Path: 1M, 3M, 6M, 12M)
+    # 12. P0 FIX: Rigorous Treasury Short-End Bill Curve (1M, 3M, 6M, 1Y)
     dgs1mo_obs = fred_data.get("DGS1MO", [])
     dgs3mo_obs = fred_data.get("DGS3MO", [])
     dgs6mo_obs = fred_data.get("DGS6MO", [])
     dgs1_obs = fred_data.get("DGS1", [])
 
     rate_path = {
+        "title": "US Treasury Short-End Bill Curve",
+        "description": "Yields across 1M, 3M, 6M, 12M Treasury bills. Driven by bill supply, money-market demand, and Fed rate expectations (not direct futures probabilities).",
         "m1": dgs1mo_obs[-1]["value"] if dgs1mo_obs else None,
         "m3": dgs3mo_obs[-1]["value"] if dgs3mo_obs else None,
         "m6": dgs6mo_obs[-1]["value"] if dgs6mo_obs else None,
         "m12": dgs1_obs[-1]["value"] if dgs1_obs else None,
         "updated": dgs1mo_obs[-1]["date"] if dgs1mo_obs else None,
         "frequency": "Daily",
-        "source": "FRED (U.S. Treasury Curve)",
-        "status": "ok"
+        "source": "U.S. Treasury / FRED",
+        "status": "ok" if dgs1mo_obs else "unavailable"
     }
 
-    # Regime synthesis
+    # 13. P1 UPGRADE: Multi-dimensional Macro Regime Engine
     macro_regime = build_macro_regime(
-        usd_pct_30d=dxy_data["change_30d"] if dxy_data else None,
-        dxy_p1y=dxy_data["percentile_1y"] if dxy_data else None,
-        real_yield_change_30d=us10y_real["change_30d_bp"] if us10y_real else None,
-        liq_proxy_change_30d=us_liquidity_proxy["change_30d"] if us_liquidity_proxy else None,
-        spx_change_30d=spx_data["change_30d"] if spx_data else None,
-        vix_curr=vix_data["current"] if vix_data else None,
-        hy_spread_curr=hy_spread["current"] if hy_spread else None,
-        hy_change_1m=hy_spread["change_1m_bp"] if hy_spread else None,
-        etf_flow_7d=etf_flows["flow_7d_mil"] if etf_flows else None,
-        funding_annualized=crypto_leverage.get("funding_rate", {}).get("annualized_pct") if crypto_leverage.get("funding_rate") else None,
-        oi_change_7d=crypto_leverage.get("open_interest", {}).get("change_7d") if crypto_leverage.get("open_interest") else None
+        dxy_data=dxy_data,
+        us10y_real=us10y_real,
+        us_liquidity_proxy=us_liquidity_proxy,
+        spx_data=spx_data,
+        vix_data=vix_data,
+        hy_spread=hy_spread,
+        etf_flows=etf_flows,
+        crypto_leverage=crypto_leverage
     )
 
-    # Divergence synthesis
-    market_divergence = detect_market_divergence(
+    # 14. P1 UPGRADE: Rigorous Divergence Analysis with Real Rolling Pearson Correlations
+    divergence_data = detect_market_divergence(
         regime=macro_regime,
-        btc_change_7d=btc_data["change_7d"] if btc_data else None,
-        btc_change_30d=btc_data["change_30d"] if btc_data else None,
-        dxy_change_30d=dxy_data["change_30d"] if dxy_data else None,
-        nasdaq_change_30d=nasdaq_data["change_30d"] if nasdaq_data else None,
-        real_yield_change_30d=us10y_real["change_30d_bp"] if us10y_real else None,
-        etf_flow_7d=etf_flows["flow_7d_mil"] if etf_flows else None,
-        oi_change_7d=crypto_leverage.get("open_interest", {}).get("change_7d") if crypto_leverage.get("open_interest") else None,
-        funding_annualized=crypto_leverage.get("funding_rate", {}).get("annualized_pct") if crypto_leverage.get("funding_rate") else None,
-        hy_spread_curr=hy_spread["current"] if hy_spread else None
+        btc_data=btc_data,
+        dxy_data=dxy_data,
+        nasdaq_data=nasdaq_data,
+        us10y_real=us10y_real,
+        gold_data=gold_data,
+        etf_flows=etf_flows,
+        crypto_leverage=crypto_leverage,
+        hy_spread=hy_spread
     )
+
+    # 15. P0 FIX: Real Data Quality Tracker (Eliminates fake "100% Live Sync")
+    tracked_metrics = [
+        {"name": "Bitcoin (BTC)", "category": "Crypto Spot", "status": btc_data.get("status"), "source": btc_data.get("source"), "updated": btc_data.get("updated"), "frequency": "Daily"},
+        {"name": "US Dollar Index (DXY)", "category": "Currency", "status": dxy_data.get("status"), "source": dxy_data.get("source"), "updated": dxy_data.get("updated"), "frequency": "Daily"},
+        {"name": "S&P 500 (SPX)", "category": "Equities", "status": spx_data.get("status"), "source": spx_data.get("source"), "updated": spx_data.get("updated"), "frequency": "Daily"},
+        {"name": "Nasdaq 100 (NDX)", "category": "Equities", "status": nasdaq_data.get("status"), "source": nasdaq_data.get("source"), "updated": nasdaq_data.get("updated"), "frequency": "Daily"},
+        {"name": "VIX Volatility", "category": "Volatility", "status": vix_data.get("status"), "source": vix_data.get("source"), "updated": vix_data.get("updated"), "frequency": "Daily"},
+        {"name": "COMEX Gold", "category": "Commodities", "status": gold_data.get("status"), "source": gold_data.get("source"), "updated": gold_data.get("updated"), "frequency": "Daily"},
+        {"name": "NYMEX Crude Oil", "category": "Commodities", "status": oil_data.get("status"), "source": oil_data.get("source"), "updated": oil_data.get("updated"), "frequency": "Daily"},
+        {"name": "US 10Y Yield", "category": "Rates", "status": us10y.get("status"), "source": us10y.get("source"), "updated": us10y.get("updated"), "frequency": "Daily"},
+        {"name": "US 2Y Yield", "category": "Rates", "status": us2y.get("status"), "source": us2y.get("source"), "updated": us2y.get("updated"), "frequency": "Daily"},
+        {"name": "10Y Real Yield (TIPS)", "category": "Rates", "status": us10y_real.get("status"), "source": us10y_real.get("source"), "updated": us10y_real.get("updated"), "frequency": "Daily"},
+        {"name": "10Y-2Y Yield Spread", "category": "Rates", "status": spread_10y_2y.get("status"), "source": spread_10y_2y.get("source"), "updated": spread_10y_2y.get("updated"), "frequency": "Daily"},
+        {"name": "Fed Target Range (DFEDTARU/L)", "category": "Policy", "status": fed_funds.get("status") if fed_funds else "unavailable", "source": "FRED", "updated": fed_funds.get("target_updated") if fed_funds else None, "frequency": "Daily"},
+        {"name": "Effective Fed Funds Rate (DFF)", "category": "Policy", "status": "ok" if fed_funds and fed_funds.get("effective_rate") else "unavailable", "source": "FRED", "updated": fed_funds.get("effective_updated") if fed_funds else None, "frequency": "Daily"},
+        {"name": "Treasury Bill Curve", "category": "Rates", "status": rate_path.get("status"), "source": "FRED", "updated": rate_path.get("updated"), "frequency": "Daily"},
+        {"name": "HY Credit Spread (OAS)", "category": "Credit", "status": hy_spread.get("status") if hy_spread else "unavailable", "source": "FRED", "updated": hy_spread.get("updated") if hy_spread else None, "frequency": "Daily"},
+        {"name": "Fed Balance Sheet (WALCL)", "category": "Liquidity", "status": fed_bs.get("status") if fed_bs else "unavailable", "source": "Federal Reserve", "updated": fed_bs.get("updated") if fed_bs else None, "frequency": "Weekly"},
+        {"name": "Treasury General Account (TGA)", "category": "Liquidity", "status": tga.get("status") if tga else "unavailable", "source": "U.S. Treasury", "updated": tga.get("updated") if tga else None, "frequency": "Weekly"},
+        {"name": "Reverse Repo (RRP)", "category": "Liquidity", "status": rrp.get("status") if rrp else "unavailable", "source": "NY Fed", "updated": rrp.get("updated") if rrp else None, "frequency": "Daily"},
+        {"name": "Bank Reserves", "category": "Liquidity", "status": bank_reserves.get("status") if bank_reserves else "unavailable", "source": "Federal Reserve", "updated": bank_reserves.get("updated") if bank_reserves else None, "frequency": "Weekly"},
+        {"name": "US Net Liquidity Proxy", "category": "Liquidity", "status": us_liquidity_proxy.get("status") if us_liquidity_proxy else "unavailable", "source": "Derived", "updated": us_liquidity_proxy.get("updated") if us_liquidity_proxy else None, "frequency": "Weekly"},
+        {"name": "BTC Spot ETF Net Flow", "category": "Crypto Capital Flow", "status": etf_flows.get("status") if etf_flows else "unavailable", "source": "Farside Investors", "updated": etf_flows.get("updated") if etf_flows else None, "frequency": "Daily"},
+        {"name": "Stablecoin Market Cap", "category": "Crypto Capital Flow", "status": stablecoins.get("status") if stablecoins else "unavailable", "source": "DefiLlama", "updated": stablecoins.get("updated") if stablecoins else None, "frequency": "Daily"},
+        {"name": "Binance BTC Funding Rate", "category": "Crypto Leverage", "status": crypto_leverage.get("funding_rate", {}).get("status", "unavailable") if crypto_leverage.get("funding_rate") else "unavailable", "source": "Binance Futures", "updated": crypto_leverage.get("funding_rate", {}).get("updated") if crypto_leverage.get("funding_rate") else None, "frequency": "8-Hour"},
+        {"name": "Binance BTC Open Interest", "category": "Crypto Leverage", "status": crypto_leverage.get("open_interest", {}).get("status", "unavailable") if crypto_leverage.get("open_interest") else "unavailable", "source": "Binance Futures", "updated": crypto_leverage.get("open_interest", {}).get("updated") if crypto_leverage.get("open_interest") else None, "frequency": "Daily"},
+        {"name": "Futures Liquidations", "category": "Crypto Leverage", "status": crypto_leverage.get("liquidations", {}).get("status", "unavailable"), "source": "CoinGlass", "updated": None, "frequency": "24H"},
+        {"name": "Exchange Netflow", "category": "Crypto Capital Flow", "status": crypto_leverage.get("exchange_netflow", {}).get("status", "unavailable"), "source": "CryptoQuant", "updated": None, "frequency": "Daily"},
+        {"name": "Crypto Fear & Greed", "category": "Sentiment", "status": crypto_fng.get("status") if crypto_fng else "unavailable", "source": "Alternative.me", "updated": crypto_fng.get("updated") if crypto_fng else None, "frequency": "Daily"}
+    ]
+    data_quality = build_data_quality_report(tracked_metrics)
 
     output = {
         "updated_at": now_utc.isoformat(),
+        "data_quality": data_quality,
         "macro_regime": macro_regime,
-        "market_divergence": market_divergence,
+        "market_divergence": divergence_data.get("cases", []),
+        "rolling_correlations": divergence_data.get("correlations", {}),
         "overview": {
             "btc": btc_data,
             "btc_etf_flow": etf_flows,
@@ -928,7 +1357,7 @@ def main():
     with open("public/data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print("Success: public/data.json generated with complete macro & crypto dataset.")
+    print(f"Success: public/data.json generated. Quality: {data_quality['summary']}.")
 
 if __name__ == "__main__":
     main()

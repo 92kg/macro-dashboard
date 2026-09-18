@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macro Pulse Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-2">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Macro Daily Dashboard</h1>
+        <p class="text-sm text-slate-400">宏观流动性 / 资产行情 / 情绪速览</p>
+      </div>
+      <div class="text-xs text-slate-500 font-mono" id="updated-time">更新中...</div>
+    </header>
+
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container"></main>
+  </div>
+
+  <script>
+    async function loadData() {
+      try {
+        const res = await fetch('./data.json?t=' + Date.now());
+        const data = await res.json();
+        
+        document.getElementById('updated-time').innerText = 'UTC: ' + new Date(data.updated_at).toLocaleString();
+        const container = document.getElementById('cards-container');
+        container.innerHTML = '';
+
+        const cards = [
+          {
+            title: '加密恐慌贪婪 (Fear & Greed)',
+            value: data.crypto_sentiment.current ? data.crypto_sentiment.current.value : '--',
+            sub: data.crypto_sentiment.current ? data.crypto_sentiment.current.classification : '',
+            history: (data.crypto_sentiment.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#eab308'
+          },
+          {
+            title: '美元指数 (DXY)',
+            value: data.market.DXY?.current ?? '--',
+            sub: data.market.DXY?.change_pct != null ? (data.market.DXY.change_pct > 0 ? '+' : '') + data.market.DXY.change_pct + '%' : '--',
+            isPositive: (data.market.DXY?.change_pct ?? 0) >= 0,
+            history: (data.market.DXY?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#38bdf8'
+          },
+          {
+            title: '标普 500 (SPX)',
+            value: data.market.SPX?.current ?? '--',
+            sub: data.market.SPX?.change_pct != null ? (data.market.SPX.change_pct > 0 ? '+' : '') + data.market.SPX.change_pct + '%' : '--',
+            isPositive: (data.market.SPX?.change_pct ?? 0) >= 0,
+            history: (data.market.SPX?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#4ade80'
+          },
+          {
+            title: '纳斯达克 (IXIC)',
+            value: data.market.NASDAQ?.current ?? '--',
+            sub: data.market.NASDAQ?.change_pct != null ? (data.market.NASDAQ.change_pct > 0 ? '+' : '') + data.market.NASDAQ.change_pct + '%' : '--',
+            isPositive: (data.market.NASDAQ?.change_pct ?? 0) >= 0,
+            history: (data.market.NASDAQ?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#4ade80'
+          },
+          {
+            title: '美债 10Y / 2Y 收益率',
+            value: `${data.macro.us10y?.current ?? '--'}%`,
+            sub: `2Y: ${data.macro.us2y?.current ?? '--'}% | 利差: ${(data.macro.us10y?.current && data.macro.us2y?.current) ? (data.macro.us10y.current - data.macro.us2y.current).toFixed(2) : '--'}%`,
+            history: (data.macro.us10y?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#f97316'
+          },
+          {
+            title: '黄金 (COMEX Gold)',
+            value: data.market.GOLD?.current ? `$${data.market.GOLD.current}` : '--',
+            sub: data.market.GOLD?.change_pct != null ? (data.market.GOLD.change_pct > 0 ? '+' : '') + data.market.GOLD.change_pct + '%' : '--',
+            isPositive: (data.market.GOLD?.change_pct ?? 0) >= 0,
+            history: (data.market.GOLD?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#fbbf24'
+          },
+          {
+            title: '原油 (WTI Crude)',
+            value: data.market.CRUDE_OIL?.current ? `$${data.market.CRUDE_OIL.current}` : '--',
+            sub: data.market.CRUDE_OIL?.change_pct != null ? (data.market.CRUDE_OIL.change_pct > 0 ? '+' : '') + data.market.CRUDE_OIL.change_pct + '%' : '--',
+            isPositive: (data.market.CRUDE_OIL?.change_pct ?? 0) >= 0,
+            history: (data.market.CRUDE_OIL?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#a855f7'
+          },
+          {
+            title: 'Fed 资产负债表规模',
+            value: data.macro.fed_assets_mil?.current ? `${(data.macro.fed_assets_mil.current / 1000000).toFixed(2)}T` : '--',
+            sub: 'WALCL 指标',
+            history: (data.macro.fed_assets_mil?.history || []).map(h => ({ x: h.date, y: h.value })),
+            color: '#ec4899'
+          }
+        ];
+
+        cards.forEach((card, idx) => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'bg-slate-900 border border-slate-800 rounded-lg p-4 flex flex-col justify-between';
+          
+          const changeColor = card.isPositive === undefined ? 'text-slate-400' : (card.isPositive ? 'text-emerald-400' : 'text-rose-400');
+
+          cardEl.innerHTML = `
+            <div>
+              <div class="text-xs font-medium text-slate-400 tracking-wide">${card.title}</div>
+              <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold tracking-tight">${card.value}</span>
+                <span class="text-xs font-mono ${changeColor}">${card.sub}</span>
+              </div>
+            </div>
+            <div class="mt-4 h-16 w-full">
+              <canvas id="chart-${idx}"></canvas>
+            </div>
+          `;
+          container.appendChild(cardEl);
+
+          const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: card.history.map(h => h.x),
+              datasets: [{
+                data: card.history.map(h => h.y),
+                borderColor: card.color,
+                borderWidth: 1.5,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { enabled: true } },
+              scales: {
+                x: { display: false },
+                y: { display: false }
+              }
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error('Failed to load macro data:', err);
+      }
+    }
+    loadData();
+  </script>
+</body>
+</html>

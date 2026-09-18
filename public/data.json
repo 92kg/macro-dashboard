@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-18T01:30:13.313199+00:00",
+  "updated_at": "2026-09-18T01:39:34.919951+00:00",
   "crypto_sentiment": {
     "current": {
       "date": "2026-09-18",
@@ -447,8 +447,8 @@
       ]
     },
     "GOLD": {
-      "current": 4400.4,
-      "change_pct": 0.29,
+      "current": 4397.6,
+      "change_pct": 0.23,
       "history": [
         {
           "date": "2026-08-17",
@@ -540,13 +540,13 @@
         },
         {
           "date": "2026-09-17",
-          "value": 4400.4
+          "value": 4397.6
         }
       ]
     },
     "CRUDE_OIL": {
-      "current": 101.34,
-      "change_pct": -1.06,
+      "current": 101.35,
+      "change_pct": -1.05,
       "history": [
         {
           "date": "2026-08-17",
@@ -638,13 +638,13 @@
         },
         {
           "date": "2026-09-17",
-          "value": 101.34
+          "value": 101.35
         }
       ]
     },
     "BTC": {
-      "current": 76525.25,
-      "change_pct": 0.49,
+      "current": 76575.64,
+      "change_pct": 0.56,
       "history": [
         {
           "date": "2026-08-18",
@@ -768,7 +768,7 @@
         },
         {
           "date": "2026-09-18",
-          "value": 76525.25
+          "value": 76575.64
         }
       ]
     }

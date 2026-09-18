@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-18T15:15:41.854762+00:00",
+  "updated_at": "2026-09-18T15:21:32.780506+00:00",
   "macro_regime": {
     "usd": "Strong",
     "real_yield": "Rising",
@@ -19,10 +19,10 @@
   "overview": {
     "btc": {
       "symbol": "BTC-USD",
-      "current": 80774.76,
-      "change_1d": 5.72,
-      "change_7d": 4.67,
-      "change_30d": 16.61,
+      "current": 80870.07,
+      "change_1d": 5.85,
+      "change_7d": 4.79,
+      "change_30d": 16.75,
       "percentile_1y": 61.5,
       "updated": "2026-09-18",
       "frequency": "Intraday",
@@ -387,7 +387,7 @@
         },
         {
           "date": "2026-09-18",
-          "value": 80774.76
+          "value": 80870.07
         }
       ]
     },
@@ -622,10 +622,10 @@
     },
     "dxy": {
       "symbol": "DX-Y.NYB",
-      "current": 100.46,
-      "change_1d": 0.24,
-      "change_7d": 1.71,
-      "change_30d": 0.49,
+      "current": 100.44,
+      "change_1d": 0.22,
+      "change_7d": 1.69,
+      "change_30d": 0.47,
       "percentile_1y": 88.5,
       "updated": "2026-09-18",
       "frequency": "Intraday",
@@ -990,7 +990,7 @@
         },
         {
           "date": "2026-09-18",
-          "value": 100.46
+          "value": 100.44
         }
       ]
     },
@@ -1461,10 +1461,10 @@
   "traditional_risk": {
     "spx": {
       "symbol": "^GSPC",
-      "current": 7626.36,
-      "change_1d": -0.15,
-      "change_7d": -0.13,
-      "change_30d": -1.08,
+      "current": 7627.73,
+      "change_1d": -0.13,
+      "change_7d": -0.11,
+      "change_30d": -1.07,
       "percentile_1y": 88.9,
       "updated": "2026-09-18",
       "frequency": "Daily",
@@ -1829,17 +1829,17 @@
         },
         {
           "date": "2026-09-18",
-          "value": 7626.36
+          "value": 7627.73
         }
       ]
     },
     "nasdaq": {
       "symbol": "^NDX",
-      "current": 29440.89,
-      "change_1d": -0.02,
-      "change_7d": 0.07,
-      "change_30d": 0.23,
-      "percentile_1y": 83.7,
+      "current": 29447.68,
+      "change_1d": 0.0,
+      "change_7d": 0.09,
+      "change_30d": 0.25,
+      "percentile_1y": 84.5,
       "updated": "2026-09-18",
       "frequency": "Daily",
       "source": "Exchange (CBOE/CME/NYBOT)",
@@ -2203,17 +2203,17 @@
         },
         {
           "date": "2026-09-18",
-          "value": 29440.89
+          "value": 29447.68
         }
       ]
     },
     "vix": {
       "symbol": "^VIX",
-      "current": 15.28,
-      "change_1d": -1.04,
-      "change_7d": -7.17,
-      "change_30d": 2.55,
-      "percentile_1y": 12.6,
+      "current": 15.3,
+      "change_1d": -0.91,
+      "change_7d": -7.05,
+      "change_30d": 2.68,
+      "percentile_1y": 13.4,
       "updated": "2026-09-18",
       "frequency": "Daily",
       "source": "Exchange (CBOE/CME/NYBOT)",
@@ -2577,7 +2577,7 @@
         },
         {
           "date": "2026-09-18",
-          "value": 15.28
+          "value": 15.3
         }
       ]
     },
@@ -6408,10 +6408,10 @@
   "commodities": {
     "gold": {
       "symbol": "GC=F",
-      "current": 4392.3,
-      "change_1d": -0.17,
-      "change_7d": -1.53,
-      "change_30d": 2.16,
+      "current": 4388.7,
+      "change_1d": -0.25,
+      "change_7d": -1.61,
+      "change_30d": 2.07,
       "percentile_1y": 46.8,
       "updated": "2026-09-18",
       "frequency": "Daily",
@@ -6776,16 +6776,16 @@
         },
         {
           "date": "2026-09-18",
-          "value": 4392.3
+          "value": 4388.7
         }
       ]
     },
     "crude_oil": {
       "symbol": "CL=F",
-      "current": 96.87,
-      "change_1d": -4.95,
-      "change_7d": 0.85,
-      "change_30d": 25.33,
+      "current": 96.88,
+      "change_1d": -4.94,
+      "change_7d": 0.86,
+      "change_30d": 25.35,
       "percentile_1y": 87.7,
       "updated": "2026-09-18",
       "frequency": "Daily",
@@ -7150,7 +7150,7 @@
         },
         {
           "date": "2026-09-18",
-          "value": 96.87
+          "value": 96.88
         }
       ]
     }

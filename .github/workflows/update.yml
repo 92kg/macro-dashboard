@@ -39,6 +39,8 @@ jobs:
       - name: Fetch Data
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          COINGLASS_API_KEY: ${{ secrets.COINGLASS_API_KEY }}
+          CRYPTOQUANT_API_KEY: ${{ secrets.CRYPTOQUANT_API_KEY }}
         run: |
           python scripts/fetch_data.py
 

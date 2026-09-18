@@ -1,150 +1,1213 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Macro Pulse Dashboard</title>
+  <title>Macro Daily Dashboard — Liquidity, Rates, Capital Flow & BTC Regime</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #080c14;
+      color: #e2e8f0;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .glow-card:hover {
+      box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .card-highlight {
+      animation: pulseHighlight 1.5s ease-out;
+    }
+    @keyframes pulseHighlight {
+      0% { box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.8); }
+      100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
-  <div class="max-w-7xl mx-auto space-y-6">
-    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-2">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight">Macro Daily Dashboard</h1>
-        <p class="text-sm text-slate-400">宏观流动性 / 资产行情 / 情绪速览</p>
+<body class="min-h-screen p-3 md:p-6 lg:p-8 font-sans selection:bg-cyan-500 selection:text-black">
+  <div class="max-w-[1560px] mx-auto space-y-6">
+
+    <!-- Top Navigation & Header -->
+    <header class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-4 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="h-11 w-11 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-xl">
+          M
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">Macro Daily Dashboard</h1>
+            <span class="px-2 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">v2.0 Pro</span>
+          </div>
+          <p class="text-xs md:text-sm text-slate-400 mt-0.5">Macro Liquidity · Traditional Risk · Crypto Capital Flow · BTC Regime</p>
+        </div>
       </div>
-      <div class="text-xs text-slate-500 font-mono" id="updated-time">更新中...</div>
+
+      <!-- Controls: Timezone, Time Window, Last Update -->
+      <div class="flex flex-wrap items-center gap-3 text-xs">
+        <!-- Time Window Filter -->
+        <div class="flex items-center bg-slate-950/80 border border-slate-800 rounded-lg p-0.5" id="window-toggle">
+          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">RANGE:</span>
+          <button onclick="setTimeWindow(7)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="7">1W</button>
+          <button onclick="setTimeWindow(30)" class="window-btn px-2.5 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition" data-window="30">30D</button>
+          <button onclick="setTimeWindow(90)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="90">90D</button>
+          <button onclick="setTimeWindow(365)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="365">1Y</button>
+        </div>
+
+        <!-- Timezone Selector -->
+        <div class="flex items-center bg-slate-950/80 border border-slate-800 rounded-lg p-0.5" id="tz-toggle">
+          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">TZ:</span>
+          <button onclick="setTimezone('UTC')" class="tz-btn px-2 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition" data-tz="UTC">UTC</button>
+          <button onclick="setTimezone('Local')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="Local">Local</button>
+          <button onclick="setTimezone('America/New_York')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="America/New_York">NY (ET)</button>
+        </div>
+
+        <!-- Refresh pill -->
+        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-slate-400" id="header-updated">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="header-updated-time">Loading...</span>
+        </div>
+      </div>
     </header>
 
-    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container"></main>
+    <!-- 10-SECOND EXECUTIVE DIAGNOSTIC STRIP (Section 23 Acceptance Criteria) -->
+    <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5 shadow-lg">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            10-Second Executive Macro Diagnosis
+          </span>
+          <span class="text-[11px] text-slate-500 font-mono hidden sm:inline">Click any pill to inspect underlying metric</span>
+        </div>
+        <span class="text-[10px] font-mono text-slate-500">All 10 Questions Answered</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs font-mono" id="executive-strip">
+        <!-- Dynamically rendered 10 interactive chips -->
+      </div>
+    </div>
+
+    <!-- SECTION 0: MACRO REGIME & MARKET DIVERGENCE DIAGNOSIS BOARD -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- Macro Regime Matrix (7 cols) -->
+      <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-white tracking-wide uppercase">Macro Regime State</span>
+              <span class="text-[11px] text-slate-500 font-mono">Structural Diagnostics</span>
+            </div>
+            <span class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700/50">Rule-Based Evaluation</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4" id="regime-grid">
+            <!-- Dynamically populated regime items -->
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800/70 flex flex-wrap items-center justify-between text-xs text-slate-400">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500">Regime Status:</span>
+            <span id="regime-summary-badge" class="font-medium text-slate-200">Evaluating macro drivers...</span>
+          </div>
+          <span class="text-[11px] text-slate-500">Objective structural classification (No Buy/Sell signals)</span>
+        </div>
+      </div>
+
+      <!-- Market Divergence & Liquidity Gauge (5 cols) -->
+      <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-white tracking-wide uppercase">Market Divergence</span>
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded" id="divergence-case-pill">EVALUATING</span>
+            </div>
+            <span class="text-xs text-slate-500 font-mono">Cross-Asset Dynamics</span>
+          </div>
+
+          <div class="mt-3 p-3.5 bg-slate-950/60 rounded-xl border border-slate-800/80" id="divergence-container">
+            <div class="text-xs font-semibold text-cyan-400 mb-1" id="divergence-title">Cross-Market Alignment</div>
+            <div class="text-xs text-slate-300 leading-relaxed" id="divergence-message">Analyzing correlation divergence between DXY, Real Yields, TradFi risk equities, and BTC spot/leverage flows...</div>
+          </div>
+        </div>
+
+        <!-- US Liquidity Proxy Banner -->
+        <div class="mt-3 p-3 bg-gradient-to-r from-slate-950 to-slate-900 rounded-xl border border-slate-800 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-medium text-slate-400">US Liquidity Proxy</span>
+              <span class="text-[10px] text-cyan-400 bg-cyan-950/50 px-1.5 py-0.2 rounded border border-cyan-800/40">Derived</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-mono">Fed BS - TGA - RRP</div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-bold font-mono text-white" id="proxy-headline-val">--</div>
+            <div class="text-xs font-mono" id="proxy-headline-change">--</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION 1: MARKET OVERVIEW (第一层：核心市场状态) -->
+    <section class="space-y-3" id="sec-overview">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">1. Core Market Overview</h2>
+          <span class="text-xs text-slate-500">BTC, ETF Inflows, USD Index & Sentiment</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Tier-1 Anchor Assets</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="overview-cards"></div>
+    </section>
+
+    <!-- SECTION 2: TRADITIONAL RISK ASSETS (第二层：传统金融市场) -->
+    <section class="space-y-3" id="sec-trad">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. Traditional Risk Assets & Credit</h2>
+          <span class="text-xs text-slate-500">S&P 500, Nasdaq, VIX & High Yield Spreads</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Equity & Credit Risk Premium</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="trad-cards"></div>
+    </section>
+
+    <!-- SECTION 3: RATES & YIELD CURVE (利率与收益率曲线) -->
+    <section class="space-y-3" id="sec-rates">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. Rates & Yield Curve</h2>
+          <span class="text-xs text-slate-500">Nominal 10Y/2Y, Real Yield (TIPS), 10Y-2Y Spread & Treasury Rate Path</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Sovereign Debt Benchmark</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="rates-cards"></div>
+    </section>
+
+    <!-- SECTION 4: US DOLLAR LIQUIDITY (第三层：美元流动性体系) -->
+    <section class="space-y-3" id="sec-liquidity">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">4. US Dollar Liquidity System</h2>
+          <span class="text-xs text-slate-500">Fed Assets (WALCL), TGA, RRP, Bank Reserves & Derived Liquidity Proxy</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Central Bank Balance Sheet</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="liquidity-cards"></div>
+    </section>
+
+    <!-- SECTION 5: CRYPTO CAPITAL FLOW & DERIVATIVES (第四层：Crypto Capital Flow & Leverage) -->
+    <section class="space-y-3" id="sec-crypto-flow">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">5. Crypto Capital Flow & Market Structure</h2>
+          <span class="text-xs text-slate-500">Stablecoins, Funding Rates & Open Interest</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Internal Purchasing Power & Leverage</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="crypto-flow-cards"></div>
+    </section>
+
+    <!-- SECTION 6: COMMODITIES (宏观大宗商品) -->
+    <section class="space-y-3" id="sec-commodities">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">6. Macro Commodities</h2>
+          <span class="text-xs text-slate-500">COMEX Gold & WTI Crude Oil</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">Inflation & Real Store of Value</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="commodities-cards"></div>
+    </section>
+
+    <!-- Footer with Methodology & Data Sources -->
+    <footer class="mt-12 border-t border-slate-800 pt-6 pb-12 text-slate-500 text-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-400">Macro Daily Dashboard</span>
+          <span>·</span>
+          <span>Official Data Sources: Federal Reserve (FRED/H.4.1), U.S. Treasury, CBOE, Farside Investors, DefiLlama, Binance Futures</span>
+        </div>
+        <p class="text-[11px] text-slate-600">Strictly non-commercial research instrument. No financial advice or trade signals generated.</p>
+      </div>
+      <div class="flex items-center gap-3 font-mono text-[11px]">
+        <span>Automated Daily Sync via GitHub Actions</span>
+        <span>·</span>
+        <a href="./data.json" target="_blank" class="text-cyan-400 hover:underline">data.json</a>
+      </div>
+    </footer>
+
   </div>
 
   <script>
-    async function loadData() {
-      try {
-        const res = await fetch('./data.json?t=' + Date.now());
-        const data = await res.json();
-        
-        document.getElementById('updated-time').innerText = 'UTC: ' + new Date(data.updated_at).toLocaleString();
-        const container = document.getElementById('cards-container');
-        container.innerHTML = '';
+    // Global state
+    let globalData = null;
+    let selectedTimezone = 'UTC';
+    let selectedDays = 30;
+    const chartInstances = {};
 
-        const cards = [
-          {
-            title: '加密恐慌贪婪 (Fear & Greed)',
-            value: data.crypto_sentiment.current ? data.crypto_sentiment.current.value : '--',
-            sub: data.crypto_sentiment.current ? data.crypto_sentiment.current.classification : '',
-            history: (data.crypto_sentiment.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#eab308'
-          },
-          {
-            title: '美元指数 (DXY)',
-            value: data.market.DXY?.current ?? '--',
-            sub: data.market.DXY?.change_pct != null ? (data.market.DXY.change_pct > 0 ? '+' : '') + data.market.DXY.change_pct + '%' : '--',
-            isPositive: (data.market.DXY?.change_pct ?? 0) >= 0,
-            history: (data.market.DXY?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#38bdf8'
-          },
-          {
-            title: '标普 500 (SPX)',
-            value: data.market.SPX?.current ?? '--',
-            sub: data.market.SPX?.change_pct != null ? (data.market.SPX.change_pct > 0 ? '+' : '') + data.market.SPX.change_pct + '%' : '--',
-            isPositive: (data.market.SPX?.change_pct ?? 0) >= 0,
-            history: (data.market.SPX?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#4ade80'
-          },
-          {
-            title: '纳斯达克 (IXIC)',
-            value: data.market.NASDAQ?.current ?? '--',
-            sub: data.market.NASDAQ?.change_pct != null ? (data.market.NASDAQ.change_pct > 0 ? '+' : '') + data.market.NASDAQ.change_pct + '%' : '--',
-            isPositive: (data.market.NASDAQ?.change_pct ?? 0) >= 0,
-            history: (data.market.NASDAQ?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#4ade80'
-          },
-          {
-            title: '美债 10Y / 2Y 收益率',
-            value: `${data.macro.us10y?.current ?? '--'}%`,
-            sub: `2Y: ${data.macro.us2y?.current ?? '--'}% | 利差: ${(data.macro.us10y?.current && data.macro.us2y?.current) ? (data.macro.us10y.current - data.macro.us2y.current).toFixed(2) : '--'}%`,
-            history: (data.macro.us10y?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#f97316'
-          },
-          {
-            title: '黄金 (COMEX Gold)',
-            value: data.market.GOLD?.current ? `$${data.market.GOLD.current}` : '--',
-            sub: data.market.GOLD?.change_pct != null ? (data.market.GOLD.change_pct > 0 ? '+' : '') + data.market.GOLD.change_pct + '%' : '--',
-            isPositive: (data.market.GOLD?.change_pct ?? 0) >= 0,
-            history: (data.market.GOLD?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#fbbf24'
-          },
-          {
-            title: '原油 (WTI Crude)',
-            value: data.market.CRUDE_OIL?.current ? `$${data.market.CRUDE_OIL.current}` : '--',
-            sub: data.market.CRUDE_OIL?.change_pct != null ? (data.market.CRUDE_OIL.change_pct > 0 ? '+' : '') + data.market.CRUDE_OIL.change_pct + '%' : '--',
-            isPositive: (data.market.CRUDE_OIL?.change_pct ?? 0) >= 0,
-            history: (data.market.CRUDE_OIL?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#a855f7'
-          },
-          {
-            title: 'Fed 资产负债表规模',
-            value: data.macro.fed_assets_mil?.current ? `${(data.macro.fed_assets_mil.current / 1000000).toFixed(2)}T` : '--',
-            sub: 'WALCL 指标',
-            history: (data.macro.fed_assets_mil?.history || []).map(h => ({ x: h.date, y: h.value })),
-            color: '#ec4899'
-          }
-        ];
+    function setTimezone(tz) {
+      selectedTimezone = tz;
+      document.querySelectorAll('#tz-toggle .tz-btn').forEach(btn => {
+        if (btn.getAttribute('data-tz') === tz) {
+          btn.className = 'tz-btn px-2 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition';
+        } else {
+          btn.className = 'tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition';
+        }
+      });
+      renderDashboard();
+    }
 
-        cards.forEach((card, idx) => {
-          const cardEl = document.createElement('div');
-          cardEl.className = 'bg-slate-900 border border-slate-800 rounded-lg p-4 flex flex-col justify-between';
-          
-          const changeColor = card.isPositive === undefined ? 'text-slate-400' : (card.isPositive ? 'text-emerald-400' : 'text-rose-400');
+    function setTimeWindow(days) {
+      selectedDays = days;
+      document.querySelectorAll('#window-toggle .window-btn').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-window')) === days) {
+          btn.className = 'window-btn px-2.5 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition';
+        } else {
+          btn.className = 'window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition';
+        }
+      });
+      renderDashboard();
+    }
 
-          cardEl.innerHTML = `
-            <div>
-              <div class="text-xs font-medium text-slate-400 tracking-wide">${card.title}</div>
-              <div class="mt-2 flex items-baseline justify-between">
-                <span class="text-2xl font-bold tracking-tight">${card.value}</span>
-                <span class="text-xs font-mono ${changeColor}">${card.sub}</span>
-              </div>
-            </div>
-            <div class="mt-4 h-16 w-full">
-              <canvas id="chart-${idx}"></canvas>
-            </div>
-          `;
-          container.appendChild(cardEl);
-
-          const ctx = document.getElementById(`chart-${idx}`).getContext('2d');
-          new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: card.history.map(h => h.x),
-              datasets: [{
-                data: card.history.map(h => h.y),
-                borderColor: card.color,
-                borderWidth: 1.5,
-                fill: false,
-                tension: 0.2,
-                pointRadius: 0
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false }, tooltip: { enabled: true } },
-              scales: {
-                x: { display: false },
-                y: { display: false }
-              }
-            }
-          });
-        });
-
-      } catch (err) {
-        console.error('Failed to load macro data:', err);
+    function scrollToCard(cardId) {
+      const el = document.getElementById(`card-wrapper-${cardId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('card-highlight');
+        setTimeout(() => el.classList.remove('card-highlight'), 1600);
       }
     }
-    loadData();
+
+    function formatDate(dateStr, formatType = 'short') {
+      if (!dateStr) return '--';
+      try {
+        const d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return dateStr;
+        
+        let tzOpt = {};
+        if (selectedTimezone === 'America/New_York') {
+          tzOpt = { timeZone: 'America/New_York' };
+        } else if (selectedTimezone === 'UTC') {
+          tzOpt = { timeZone: 'UTC' };
+        }
+        
+        if (formatType === 'time') {
+          return d.toLocaleString('zh-CN', { ...tzOpt, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' ' + (selectedTimezone === 'America/New_York' ? 'ET' : selectedTimezone);
+        }
+        return d.toLocaleDateString('zh-CN', { ...tzOpt, month: 'short', day: 'numeric' });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function formatChangePct(val, showPlus = true) {
+      if (val === null || val === undefined) return '--';
+      const num = Number(val);
+      const sign = num > 0 && showPlus ? '+' : '';
+      return `${sign}${num.toFixed(2)}%`;
+    }
+
+    function formatChangeBp(val) {
+      if (val === null || val === undefined) return '--';
+      const num = Number(val);
+      const sign = num > 0 ? '+' : '';
+      return `${sign}${num.toFixed(1)} bp`;
+    }
+
+    function renderExecutiveStrip(d) {
+      const strip = document.getElementById('executive-strip');
+      if (!strip || !d) return;
+
+      const btc = d.overview?.btc;
+      const etf = d.overview?.btc_etf_flow;
+      const dxy = d.overview?.dxy;
+      const real10y = d.rates?.us10y_real;
+      const liq = d.us_liquidity?.us_liquidity_proxy;
+      const spx = d.traditional_risk?.spx;
+      const hy = d.traditional_risk?.hy_spread;
+      const funding = d.crypto_leverage?.funding_rate;
+      const divCase = d.market_divergence?.[0]?.case_id || 'Neutral';
+
+      const items = [
+        { q: '1. BTC Price', a: btc ? `$${Number(btc.current).toLocaleString()} (${formatChangePct(btc.change_1d)})` : '--', target: 'btc', tone: (btc?.change_1d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '2. ETF Flow', a: etf ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M (7D ${etf.flow_7d_bil >= 0 ? '+' : ''}${etf.flow_7d_bil}B)` : '--', target: 'etf-flow', tone: (etf?.flow_7d_bil ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '3. USD', a: dxy ? `${dxy.current} (${d.macro_regime?.usd})` : '--', target: 'dxy', tone: d.macro_regime?.usd === 'Strong' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '4. Real Yield', a: real10y ? `${real10y.current}% (${d.macro_regime?.real_yield})` : '--', target: 'real10y', tone: d.macro_regime?.real_yield === 'Rising' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '5. US Liquidity', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '6. Equities', a: d.macro_regime?.equities || 'Risk-Off', target: 'spx', tone: d.macro_regime?.equities === 'Risk-On' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
+        { q: '7. Credit Stress', a: hy ? `${hy.current}% (${d.macro_regime?.credit})` : '--', target: 'hy-spread', tone: d.macro_regime?.credit === 'Healthy' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '8. Crypto Leverage', a: funding ? `${funding.heat} (${funding.annualized_pct}% Ann.)` : '--', target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-slate-800 text-slate-300 border-slate-700' },
+        { q: '9. Divergence', a: divCase, target: 'btc', tone: divCase !== 'Neutral' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-slate-800 text-slate-400 border-slate-700' },
+        { q: '10. Data Quality', a: '100% Live Sync', target: 'header-updated', tone: 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+      ];
+
+      strip.innerHTML = items.map(it => `
+        <button onclick="scrollToCard('${it.target}')" class="px-2.5 py-1 rounded-lg border ${it.tone} hover:brightness-125 transition flex items-center gap-1.5 cursor-pointer">
+          <span class="text-slate-400 font-sans font-medium text-[11px]">${it.q}:</span>
+          <span class="font-bold">${it.a}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderRegime(regime) {
+      const container = document.getElementById('regime-grid');
+      container.innerHTML = '';
+      if (!regime) return;
+
+      const items = [
+        { label: 'USD (DXY)', val: regime.usd, good: regime.usd === 'Weak', tone: regime.usd === 'Strong' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
+        { label: '10Y Real Yield', val: regime.real_yield, good: regime.real_yield === 'Falling', tone: regime.real_yield === 'Rising' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
+        { label: 'US Liquidity', val: regime.liquidity, good: regime.liquidity === 'Expanding', tone: regime.liquidity === 'Expanding' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
+        { label: 'TradFi Equities', val: regime.equities, good: regime.equities === 'Risk-On', tone: regime.equities === 'Risk-On' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/30 text-amber-400 bg-amber-500/10' },
+        { label: 'Credit Market', val: regime.credit, good: regime.credit === 'Healthy', tone: regime.credit === 'Healthy' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
+        { label: 'BTC ETF Flow', val: regime.btc_etf_flow, good: regime.btc_etf_flow === 'Inflow', tone: regime.btc_etf_flow === 'Inflow' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
+        { label: 'Crypto Leverage', val: regime.crypto_leverage, good: regime.crypto_leverage === 'Normal', tone: regime.crypto_leverage === 'Elevated' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : (regime.crypto_leverage === 'Low' ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' : 'border-slate-700 text-slate-300 bg-slate-800/40') },
+      ];
+
+      items.forEach(it => {
+        const el = document.createElement('div');
+        el.className = `p-2.5 rounded-xl border ${it.tone} flex flex-col justify-between`;
+        el.innerHTML = `
+          <div class="text-[11px] text-slate-400 font-medium truncate">${it.label}</div>
+          <div class="text-sm font-bold mt-1 font-mono tracking-wide">${it.val}</div>
+        `;
+        container.appendChild(el);
+      });
+
+      const summaryText = `${regime.liquidity} Liquidity · ${regime.usd} USD · ${regime.equities} Equities · ETF ${regime.btc_etf_flow}`;
+      document.getElementById('regime-summary-badge').innerText = summaryText;
+    }
+
+    function renderDivergence(divList) {
+      if (!divList || !divList.length) return;
+      const active = divList[0];
+      
+      const pill = document.getElementById('divergence-case-pill');
+      const title = document.getElementById('divergence-title');
+      const msg = document.getElementById('divergence-message');
+
+      pill.innerText = active.case_id || 'NEUTRAL';
+      if (active.case_id === 'Case A') {
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else if (active.case_id === 'Case B') {
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      } else if (active.case_id === 'Case C') {
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      } else {
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-800 text-slate-400 border border-slate-700';
+      }
+
+      title.innerText = active.name || 'Macro Alignment';
+      msg.innerText = active.message || 'Relationships operating in baseline historical range.';
+    }
+
+    function createCardHTML(cfg) {
+      const isPositive = cfg.change_1d != null ? Number(cfg.change_1d) >= 0 : (cfg.isPositive ?? true);
+      const changeColor = cfg.change_1d == null ? 'text-slate-400 bg-slate-800/40 border-slate-700' : (isPositive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20');
+      const changeText = cfg.change_1d_text || formatChangePct(cfg.change_1d);
+
+      let staleBadge = '';
+      if (cfg.status === 'unavailable') {
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-rose-950/40 text-rose-400 border border-rose-800/30">Unavailable</span>`;
+      } else if (cfg.status === 'stale') {
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-amber-950/40 text-amber-400 border border-amber-800/30">${cfg.stale_label || 'Stale'}</span>`;
+      } else {
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700/50">${cfg.frequency || 'Daily'}</span>`;
+      }
+
+      let multiHorizonHTML = '';
+      if (cfg.horizonItems && cfg.horizonItems.length) {
+        multiHorizonHTML = `
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-800/60 text-[11px] font-mono">
+            ${cfg.horizonItems.map(h => `
+              <div>
+                <span class="text-slate-500">${h.label}:</span>
+                <span class="${h.color || (h.val != null && Number(h.val) >= 0 ? 'text-emerald-400' : (h.val != null ? 'text-rose-400' : 'text-slate-300'))} font-medium">${h.display || h.val || '--'}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // Visual 1Y Percentile meter if available
+      let percentileMeterHTML = '';
+      if (cfg.percentile_1y != null) {
+        const pct = Math.min(100, Math.max(0, Number(cfg.percentile_1y)));
+        percentileMeterHTML = `
+          <div class="mt-2.5 pt-2 border-t border-slate-800/60">
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
+              <span class="text-slate-500">1Y Percentile Rank:</span>
+              <span class="text-cyan-400 font-semibold">${pct}%</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Optional extra custom HTML (e.g. for stablecoin breakdown or rate path)
+      let customHTML = cfg.customHTML || '';
+
+      return `
+        <div id="card-wrapper-${cfg.chartId}" class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between glow-card transition duration-200 shadow-lg">
+          <div>
+            <!-- Card Header -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-slate-300 truncate">${cfg.title}</span>
+                ${cfg.badge ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/40">${cfg.badge}</span>` : ''}
+              </div>
+              <div>${staleBadge}</div>
+            </div>
+
+            <!-- Value & Primary Change -->
+            <div class="mt-2.5 flex items-baseline justify-between gap-2">
+              <div class="text-2xl font-bold tracking-tight text-white font-mono">${cfg.value ?? '--'}</div>
+              ${cfg.status !== 'unavailable' ? `
+                <div class="px-2 py-0.5 rounded-full border text-xs font-mono font-semibold ${changeColor}">
+                  ${changeText}
+                </div>
+              ` : `
+                <div class="text-[11px] text-slate-500 font-mono italic">${cfg.reason || 'Missing Key'}</div>
+              `}
+            </div>
+
+            <!-- Multi Horizon Changes -->
+            ${multiHorizonHTML}
+
+            <!-- 1Y Percentile Meter -->
+            ${percentileMeterHTML}
+
+            <!-- Custom extra content -->
+            ${customHTML}
+          </div>
+
+          <!-- Chart / Sparkline -->
+          <div class="mt-3">
+            <div class="h-16 w-full ${cfg.status === 'unavailable' ? 'opacity-20 flex items-center justify-center border border-dashed border-slate-800 rounded' : ''}">
+              ${cfg.status === 'unavailable' ? `
+                <span class="text-[11px] text-slate-600 font-mono">Data Source Unavailable</span>
+              ` : `
+                <canvas id="chart-${cfg.chartId}"></canvas>
+              `}
+            </div>
+
+            <!-- Card Footer -->
+            <div class="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+              <span title="Updated">${formatDate(cfg.updated)}</span>
+              <span title="Data Source" class="text-slate-500 hover:text-slate-400">${cfg.source || 'Official'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSparkline(canvasId, historyData, color = '#06b6d4', isBar = false) {
+      const canvas = document.getElementById(`chart-${canvasId}`);
+      if (!canvas) return;
+
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+
+      if (!historyData || !historyData.length) return;
+
+      const sliced = historyData.slice(-selectedDays);
+      const labels = sliced.map(d => d.date);
+      const values = sliced.map(d => d.value);
+
+      const ctx = canvas.getContext('2d');
+
+      if (isBar) {
+        chartInstances[canvasId] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: values.map(v => v >= 0 ? 'rgba(52, 211, 153, 0.85)' : 'rgba(251, 113, 133, 0.85)'),
+              borderRadius: 2,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (c) => `Net Flow: ${c.raw >= 0 ? '+' : ''}${c.raw}M`
+                }
+              }
+            },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            }
+          }
+        });
+        return;
+      }
+
+      // Standard Line Sparkline
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            borderColor: color,
+            borderWidth: 1.75,
+            fill: {
+              target: 'origin',
+              above: color.replace(')', ', 0.08)').replace('rgb', 'rgba').replace('#06b6d4', 'rgba(6, 182, 212, 0.08)')
+            },
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (c) => `Value: ${c.raw}`
+              }
+            }
+          },
+          scales: {
+            x: { display: false },
+            y: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderDashboard() {
+      if (!globalData) return;
+      const d = globalData;
+
+      // Header Updated Time
+      document.getElementById('header-updated-time').innerText = formatDate(d.updated_at, 'time');
+
+      // 10-Second Executive Strip
+      renderExecutiveStrip(d);
+
+      // 0. Macro Regime & Divergence
+      renderRegime(d.macro_regime);
+      renderDivergence(d.market_divergence);
+
+      // US Liquidity Proxy Headline
+      const proxy = d.us_liquidity?.us_liquidity_proxy;
+      if (proxy) {
+        document.getElementById('proxy-headline-val').innerText = `$${proxy.current_tril}T`;
+        const ch = proxy.change_30d;
+        const color = ch >= 0 ? 'text-emerald-400' : 'text-rose-400';
+        document.getElementById('proxy-headline-change').className = `text-xs font-mono font-medium ${color}`;
+        document.getElementById('proxy-headline-change').innerText = `30D: ${ch >= 0 ? '+' : ''}${ch}%`;
+      }
+
+      // SECTION 1: OVERVIEW CARDS
+      const ovContainer = document.getElementById('overview-cards');
+      ovContainer.innerHTML = '';
+      const btc = d.overview?.btc;
+      const etf = d.overview?.btc_etf_flow;
+      const dxy = d.overview?.dxy;
+      const fng = d.overview?.fear_and_greed;
+
+      const ovCards = [
+        {
+          chartId: 'btc',
+          title: 'Bitcoin (BTC / USD)',
+          value: btc ? `$${Number(btc.current).toLocaleString('en-US')}` : '--',
+          change_1d: btc?.change_1d,
+          percentile_1y: btc?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: btc?.change_7d, display: formatChangePct(btc?.change_7d) },
+            { label: '30D', val: btc?.change_30d, display: formatChangePct(btc?.change_30d) }
+          ],
+          frequency: btc?.frequency || 'Intraday',
+          updated: btc?.updated,
+          source: btc?.source || 'Exchange',
+          status: btc?.status,
+          history: btc?.history,
+          color: '#f59e0b'
+        },
+        {
+          chartId: 'etf-flow',
+          title: 'BTC Spot ETF Net Flow',
+          value: etf?.today_net_mil != null ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M` : '--',
+          change_1d_text: `7D: ${etf?.flow_7d_bil != null ? (etf.flow_7d_bil >= 0 ? '+' : '') + etf.flow_7d_bil + 'B' : '--'}`,
+          isPositive: (etf?.flow_7d_bil ?? 0) >= 0,
+          horizonItems: [
+            { label: '7D Net', val: etf?.flow_7d_mil, display: `${etf?.flow_7d_bil >= 0 ? '+' : ''}${etf?.flow_7d_bil}B` },
+            { label: '30D Net', val: etf?.flow_30d_mil, display: `${etf?.flow_30d_bil >= 0 ? '+' : ''}${etf?.flow_30d_bil}B` },
+            { label: 'IBIT', val: etf?.latest_breakdown?.ibit, display: `${etf?.latest_breakdown?.ibit >= 0 ? '+' : ''}${etf?.latest_breakdown?.ibit}M` }
+          ],
+          frequency: etf?.frequency || 'Daily (T+1)',
+          updated: etf?.updated,
+          source: etf?.source || 'Farside',
+          status: etf?.status,
+          history: etf?.history_30d,
+          isBar: true
+        },
+        {
+          chartId: 'dxy',
+          title: 'US Dollar Index (DXY)',
+          value: dxy?.current ?? '--',
+          change_1d: dxy?.change_1d,
+          percentile_1y: dxy?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: dxy?.change_7d, display: formatChangePct(dxy?.change_7d) },
+            { label: '30D', val: dxy?.change_30d, display: formatChangePct(dxy?.change_30d) }
+          ],
+          frequency: dxy?.frequency || 'Intraday',
+          updated: dxy?.updated,
+          source: dxy?.source || 'ICE / NYBOT',
+          status: dxy?.status,
+          history: dxy?.history,
+          color: '#38bdf8'
+        },
+        {
+          chartId: 'fng',
+          title: 'Crypto Fear & Greed',
+          value: fng?.current ?? '--',
+          change_1d_text: fng?.classification ?? '--',
+          isPositive: (fng?.current ?? 0) >= 50,
+          percentile_1y: fng?.current != null ? Number(fng.current) : null,
+          horizonItems: [
+            { label: '1D', val: fng?.change_1d, display: `${fng?.change_1d >= 0 ? '+' : ''}${fng?.change_1d}` },
+            { label: '7D', val: fng?.change_7d, display: `${fng?.change_7d >= 0 ? '+' : ''}${fng?.change_7d}` },
+            { label: '30D', val: fng?.change_30d, display: `${fng?.change_30d >= 0 ? '+' : ''}${fng?.change_30d}` }
+          ],
+          frequency: fng?.frequency || 'Daily',
+          updated: fng?.updated,
+          source: fng?.source || 'Alternative.me',
+          status: fng?.status,
+          stale_label: fng?.stale_label,
+          history: fng?.history,
+          color: '#eab308'
+        }
+      ];
+
+      ovCards.forEach(c => {
+        ovContainer.innerHTML += createCardHTML(c);
+      });
+      ovCards.forEach(c => renderSparkline(c.chartId, c.history, c.color, c.isBar));
+
+      // SECTION 2: TRADITIONAL RISK CARDS
+      const tradContainer = document.getElementById('trad-cards');
+      tradContainer.innerHTML = '';
+      const spx = d.traditional_risk?.spx;
+      const ndx = d.traditional_risk?.nasdaq;
+      const vix = d.traditional_risk?.vix;
+      const hy = d.traditional_risk?.hy_spread;
+
+      const tradCards = [
+        {
+          chartId: 'spx',
+          title: 'S&P 500 (SPX)',
+          value: spx?.current ? Number(spx.current).toLocaleString('en-US') : '--',
+          change_1d: spx?.change_1d,
+          percentile_1y: spx?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: spx?.change_7d, display: formatChangePct(spx?.change_7d) },
+            { label: '30D', val: spx?.change_30d, display: formatChangePct(spx?.change_30d) }
+          ],
+          frequency: spx?.frequency || 'Daily',
+          updated: spx?.updated,
+          source: spx?.source || 'S&P Dow Jones',
+          status: spx?.status,
+          history: spx?.history,
+          color: '#10b981'
+        },
+        {
+          chartId: 'ndx',
+          title: 'Nasdaq 100 (NDX / IXIC)',
+          value: ndx?.current ? Number(ndx.current).toLocaleString('en-US') : '--',
+          change_1d: ndx?.change_1d,
+          percentile_1y: ndx?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: ndx?.change_7d, display: formatChangePct(ndx?.change_7d) },
+            { label: '30D', val: ndx?.change_30d, display: formatChangePct(ndx?.change_30d) }
+          ],
+          frequency: ndx?.frequency || 'Daily',
+          updated: ndx?.updated,
+          source: ndx?.source || 'Nasdaq',
+          status: ndx?.status,
+          history: ndx?.history,
+          color: '#06b6d4'
+        },
+        {
+          chartId: 'vix',
+          title: 'VIX Volatility Index',
+          value: vix?.current ?? '--',
+          change_1d: vix?.change_1d,
+          isPositive: (vix?.change_1d ?? 0) <= 0,
+          percentile_1y: vix?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: vix?.change_7d, display: formatChangePct(vix?.change_7d) },
+            { label: '30D', val: vix?.change_30d, display: formatChangePct(vix?.change_30d) }
+          ],
+          frequency: vix?.frequency || 'Daily',
+          updated: vix?.updated,
+          source: vix?.source || 'CBOE',
+          status: vix?.status,
+          history: vix?.history,
+          color: '#f43f5e'
+        },
+        {
+          chartId: 'hy-spread',
+          title: 'HY Credit Spread (OAS)',
+          value: hy?.current != null ? `${hy.current}%` : '--',
+          change_1d_text: hy?.change_1w_bp != null ? formatChangeBp(hy.change_1w_bp) : '--',
+          isPositive: (hy?.change_1w_bp ?? 0) <= 0,
+          percentile_1y: hy?.percentile_1y,
+          horizonItems: [
+            { label: '1W bp', val: hy?.change_1w_bp, display: formatChangeBp(hy?.change_1w_bp) },
+            { label: '1M bp', val: hy?.change_1m_bp, display: formatChangeBp(hy?.change_1m_bp) }
+          ],
+          frequency: hy?.frequency || 'Daily',
+          updated: hy?.updated,
+          source: hy?.source || 'ICE BofA / FRED',
+          status: hy?.status,
+          history: hy?.history,
+          color: '#a855f7'
+        }
+      ];
+
+      tradCards.forEach(c => {
+        tradContainer.innerHTML += createCardHTML(c);
+      });
+      tradCards.forEach(c => renderSparkline(c.chartId, c.history, c.color));
+
+      // SECTION 3: RATES & YIELD CURVE CARDS
+      const ratesContainer = document.getElementById('rates-cards');
+      ratesContainer.innerHTML = '';
+      const u10y = d.rates?.us10y;
+      const u2y = d.rates?.us2y;
+      const real10y = d.rates?.us10y_real;
+      const spread102 = d.rates?.spread_10y_2y;
+      const ratePath = d.rates?.rate_path;
+
+      let ratePathHTML = '';
+      if (ratePath) {
+        ratePathHTML = `
+          <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono">
+            <div class="text-slate-500 mb-1">Treasury Bill Curve (Implied Path):</div>
+            <div class="grid grid-cols-4 gap-1 text-center bg-slate-950 p-1.5 rounded border border-slate-800">
+              <div><span class="text-slate-500 block text-[9px]">1M</span><span class="text-cyan-400 font-bold">${ratePath.m1 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">3M</span><span class="text-cyan-400 font-bold">${ratePath.m3 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">6M</span><span class="text-cyan-400 font-bold">${ratePath.m6 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">1Y</span><span class="text-cyan-400 font-bold">${ratePath.m12 ?? '--'}%</span></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const ratesCards = [
+        {
+          chartId: 'u10y',
+          title: 'US 10Y Yield',
+          value: u10y?.current != null ? `${u10y.current}%` : '--',
+          change_1d_text: formatChangeBp(u10y?.change_1d_bp),
+          isPositive: (u10y?.change_1d_bp ?? 0) <= 0,
+          percentile_1y: u10y?.percentile_1y,
+          horizonItems: [
+            { label: '7D bp', val: u10y?.change_7d_bp, display: formatChangeBp(u10y?.change_7d_bp) },
+            { label: '30D bp', val: u10y?.change_30d_bp, display: formatChangeBp(u10y?.change_30d_bp) }
+          ],
+          frequency: u10y?.frequency || 'Daily',
+          updated: u10y?.updated,
+          source: u10y?.source || 'FRED',
+          status: u10y?.status,
+          history: u10y?.history,
+          color: '#f97316'
+        },
+        {
+          chartId: 'u2y',
+          title: 'US 2Y Yield',
+          value: u2y?.current != null ? `${u2y.current}%` : '--',
+          change_1d_text: formatChangeBp(u2y?.change_1d_bp),
+          isPositive: (u2y?.change_1d_bp ?? 0) <= 0,
+          percentile_1y: u2y?.percentile_1y,
+          horizonItems: [
+            { label: '7D bp', val: u2y?.change_7d_bp, display: formatChangeBp(u2y?.change_7d_bp) },
+            { label: '30D bp', val: u2y?.change_30d_bp, display: formatChangeBp(u2y?.change_30d_bp) }
+          ],
+          frequency: u2y?.frequency || 'Daily',
+          updated: u2y?.updated,
+          source: u2y?.source || 'FRED',
+          status: u2y?.status,
+          history: u2y?.history,
+          color: '#fb923c'
+        },
+        {
+          chartId: 'real10y',
+          title: '10Y Real Yield (TIPS)',
+          badge: 'Macro Key',
+          value: real10y?.current != null ? `${real10y.current}%` : '--',
+          change_1d_text: formatChangeBp(real10y?.change_1d_bp),
+          isPositive: (real10y?.change_1d_bp ?? 0) <= 0,
+          percentile_1y: real10y?.percentile_1y,
+          horizonItems: [
+            { label: '7D bp', val: real10y?.change_7d_bp, display: formatChangeBp(real10y?.change_7d_bp) },
+            { label: '30D bp', val: real10y?.change_30d_bp, display: formatChangeBp(real10y?.change_30d_bp) }
+          ],
+          frequency: real10y?.frequency || 'Daily',
+          updated: real10y?.updated,
+          source: real10y?.source || 'FRED (DFII10)',
+          status: real10y?.status,
+          history: real10y?.history,
+          color: '#e11d48'
+        },
+        {
+          chartId: 'spread102',
+          title: '10Y - 2Y Spread',
+          value: spread102?.current_bp != null ? `${spread102.current_bp > 0 ? '+' : ''}${spread102.current_bp} bp` : '--',
+          change_1d_text: spread102?.change_1d_bp != null ? formatChangeBp(spread102.change_1d_bp) : '--',
+          isPositive: (spread102?.current_bp ?? 0) >= 0,
+          horizonItems: [
+            { label: 'Curve', val: spread102?.current_bp, display: (spread102?.current_bp ?? 0) >= 0 ? 'Normal' : 'Inverted', color: (spread102?.current_bp ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400' },
+            { label: '7D bp', val: spread102?.change_7d_bp, display: formatChangeBp(spread102?.change_7d_bp) },
+            { label: '30D bp', val: spread102?.change_30d_bp, display: formatChangeBp(spread102?.change_30d_bp) }
+          ],
+          frequency: spread102?.frequency || 'Daily',
+          updated: spread102?.updated,
+          source: spread102?.source || 'FRED',
+          status: spread102?.status,
+          history: spread102?.history,
+          color: '#3b82f6'
+        },
+        {
+          chartId: 'fedfunds',
+          title: 'Fed Rate Path / Futures',
+          badge: 'T-Bill Curve',
+          value: ratePath?.m1 != null ? `${ratePath.m1}%` : '--',
+          change_1d_text: 'Next Mtg (1M)',
+          isPositive: true,
+          customHTML: ratePathHTML,
+          frequency: ratePath?.frequency || 'Daily',
+          updated: ratePath?.updated,
+          source: ratePath?.source || 'FRED (Treasury)',
+          status: ratePath?.status,
+          history: [],
+          color: '#8b5cf6'
+        }
+      ];
+
+      ratesCards.forEach(c => {
+        ratesContainer.innerHTML += createCardHTML(c);
+      });
+      ratesCards.forEach(c => {
+        if (c.history && c.history.length) {
+          renderSparkline(c.chartId, c.history, c.color);
+        }
+      });
+
+      // SECTION 4: US LIQUIDITY CARDS
+      const liqContainer = document.getElementById('liquidity-cards');
+      liqContainer.innerHTML = '';
+      const fedBs = d.us_liquidity?.fed_balance_sheet;
+      const tga = d.us_liquidity?.tga;
+      const rrp = d.us_liquidity?.rrp;
+      const reserves = d.us_liquidity?.bank_reserves;
+      const liqProxy = d.us_liquidity?.us_liquidity_proxy;
+
+      const liqCards = [
+        {
+          chartId: 'fedbs',
+          title: 'Fed Balance Sheet',
+          value: fedBs?.current_tril != null ? `$${fedBs.current_tril}T` : '--',
+          change_1d_text: fedBs?.change_1m != null ? `1M: ${formatChangePct(fedBs.change_1m)}` : '--',
+          isPositive: (fedBs?.change_1m ?? 0) >= 0,
+          horizonItems: [
+            { label: '3M', val: fedBs?.change_3m, display: formatChangePct(fedBs?.change_3m) },
+            { label: '6M', val: fedBs?.change_6m, display: formatChangePct(fedBs?.change_6m) },
+            { label: 'YoY', val: fedBs?.change_yoy, display: formatChangePct(fedBs?.change_yoy) }
+          ],
+          frequency: fedBs?.frequency || 'Weekly',
+          updated: fedBs?.updated,
+          source: fedBs?.source || 'Fed H.4.1',
+          status: fedBs?.status,
+          history: fedBs?.history,
+          color: '#ec4899'
+        },
+        {
+          chartId: 'tga',
+          title: 'US Treasury TGA',
+          value: tga?.current_bil != null ? `$${tga.current_bil}B` : '--',
+          change_1d_text: tga?.change_7d != null ? `7D: ${formatChangePct(tga.change_7d)}` : '--',
+          isPositive: (tga?.change_7d ?? 0) <= 0,
+          horizonItems: [
+            { label: '7D', val: tga?.change_7d, display: formatChangePct(tga?.change_7d) },
+            { label: '30D', val: tga?.change_30d, display: formatChangePct(tga?.change_30d) }
+          ],
+          frequency: tga?.frequency || 'Weekly',
+          updated: tga?.updated,
+          source: tga?.source || 'Treasury / FRED',
+          status: tga?.status,
+          history: tga?.history,
+          color: '#6366f1'
+        },
+        {
+          chartId: 'rrp',
+          title: 'Fed Reverse Repo (RRP)',
+          value: rrp?.current_bil != null ? `$${rrp.current_bil}B` : '--',
+          change_1d_text: rrp?.change_7d != null ? `7D: ${formatChangePct(rrp.change_7d)}` : '--',
+          isPositive: (rrp?.change_7d ?? 0) <= 0,
+          horizonItems: [
+            { label: '7D', val: rrp?.change_7d, display: formatChangePct(rrp?.change_7d) },
+            { label: '30D', val: rrp?.change_30d, display: formatChangePct(rrp?.change_30d) }
+          ],
+          frequency: rrp?.frequency || 'Daily',
+          updated: rrp?.updated,
+          source: rrp?.source || 'NY Fed / FRED',
+          status: rrp?.status,
+          history: rrp?.history,
+          color: '#14b8a6'
+        },
+        {
+          chartId: 'reserves',
+          title: 'Bank Reserves',
+          value: reserves?.current_bil != null ? `$${reserves.current_bil}B` : '--',
+          change_1d_text: reserves?.change_30d != null ? `30D: ${formatChangePct(reserves.change_30d)}` : '--',
+          isPositive: (reserves?.change_30d ?? 0) >= 0,
+          horizonItems: [
+            { label: '30D', val: reserves?.change_30d, display: formatChangePct(reserves?.change_30d) },
+            { label: 'Nature', val: 'Fed Liability', display: 'Reserve Balances', color: 'text-slate-400' }
+          ],
+          frequency: reserves?.frequency || 'Weekly',
+          updated: reserves?.updated,
+          source: reserves?.source || 'FRED (WRBWFRBL)',
+          status: reserves?.status,
+          history: reserves?.history,
+          color: '#10b981'
+        },
+        {
+          chartId: 'liqproxy',
+          title: 'US Liquidity Proxy',
+          badge: 'Derived',
+          value: liqProxy?.current_tril != null ? `$${liqProxy.current_tril}T` : '--',
+          change_1d_text: liqProxy?.change_30d != null ? `30D: ${formatChangePct(liqProxy.change_30d)}` : '--',
+          isPositive: (liqProxy?.change_30d ?? 0) >= 0,
+          horizonItems: [
+            { label: '7D', val: liqProxy?.change_7d, display: formatChangePct(liqProxy?.change_7d) },
+            { label: '30D', val: liqProxy?.change_30d, display: formatChangePct(liqProxy?.change_30d) }
+          ],
+          frequency: liqProxy?.frequency || 'Weekly',
+          updated: liqProxy?.updated,
+          source: liqProxy?.source || 'Derived Indicator',
+          status: liqProxy?.status,
+          history: liqProxy?.history,
+          color: '#38bdf8'
+        }
+      ];
+
+      liqCards.forEach(c => {
+        liqContainer.innerHTML += createCardHTML(c);
+      });
+      liqCards.forEach(c => renderSparkline(c.chartId, c.history, c.color));
+
+      // SECTION 5: CRYPTO CAPITAL FLOW & LEVERAGE CARDS
+      const flowContainer = document.getElementById('crypto-flow-cards');
+      flowContainer.innerHTML = '';
+      const stable = d.crypto_capital_flow?.stablecoins;
+      const netflow = d.crypto_capital_flow?.btc_exchange_netflow;
+      const funding = d.crypto_leverage?.funding_rate;
+      const oi = d.crypto_leverage?.open_interest;
+
+      // Stablecoin Composition Bar
+      let stableBreakdownHTML = '';
+      if (stable && stable.total_mcap_bil) {
+        const usdtPct = ((stable.usdt_mcap_bil / stable.total_mcap_bil) * 100).toFixed(1);
+        const usdcPct = ((stable.usdc_mcap_bil / stable.total_mcap_bil) * 100).toFixed(1);
+        stableBreakdownHTML = `
+          <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono">
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span class="text-emerald-400">USDT: $${stable.usdt_mcap_bil}B (${usdtPct}%)</span>
+              <span class="text-blue-400">USDC: $${stable.usdc_mcap_bil}B (${usdcPct}%)</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+              <div class="h-full bg-emerald-500" style="width: ${usdtPct}%"></div>
+              <div class="h-full bg-blue-500" style="width: ${usdcPct}%"></div>
+              <div class="h-full bg-slate-700 flex-1"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const flowCards = [
+        {
+          chartId: 'stablecoins',
+          title: 'Stablecoin Market Cap',
+          value: stable?.total_mcap_bil != null ? `$${stable.total_mcap_bil}B` : '--',
+          change_1d_text: stable?.change_30d != null ? `30D: ${formatChangePct(stable.change_30d)}` : '--',
+          isPositive: (stable?.change_30d ?? 0) >= 0,
+          customHTML: stableBreakdownHTML,
+          horizonItems: [
+            { label: '7D', val: stable?.change_7d, display: formatChangePct(stable?.change_7d) },
+            { label: '90D', val: stable?.change_90d, display: formatChangePct(stable?.change_90d) }
+          ],
+          frequency: stable?.frequency || 'Daily',
+          updated: stable?.updated,
+          source: stable?.source || 'DefiLlama',
+          status: stable?.status,
+          history: stable?.history,
+          color: '#10b981'
+        },
+        {
+          chartId: 'funding',
+          title: 'BTC Funding Rate',
+          value: funding?.rate_8h != null ? `${funding.rate_8h >= 0 ? '+' : ''}${funding.rate_8h}%` : '--',
+          change_1d_text: funding?.annualized_pct != null ? `${funding.annualized_pct}% Ann.` : '--',
+          isPositive: (funding?.annualized_pct ?? 0) <= 15,
+          horizonItems: [
+            { label: 'Annualized', val: funding?.annualized_pct, display: `${funding?.annualized_pct}%` },
+            { label: 'Leverage', val: funding?.heat, display: funding?.heat, color: funding?.heat === 'Elevated' ? 'text-rose-400' : 'text-cyan-400' }
+          ],
+          frequency: funding?.frequency || '8 Hours',
+          updated: funding?.updated,
+          source: funding?.source || 'Binance Futures',
+          status: funding?.status,
+          history: [],
+          color: '#f59e0b'
+        },
+        {
+          chartId: 'oi',
+          title: 'BTC Open Interest',
+          value: oi?.total_usd_bil != null ? `$${oi.total_usd_bil}B` : '--',
+          change_1d: oi?.change_24h,
+          horizonItems: [
+            { label: '24H', val: oi?.change_24h, display: formatChangePct(oi?.change_24h) },
+            { label: '7D', val: oi?.change_7d, display: formatChangePct(oi?.change_7d) },
+            { label: 'BTC', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' }
+          ],
+          frequency: oi?.frequency || 'Daily',
+          updated: oi?.updated,
+          source: oi?.source || 'Binance Futures',
+          status: oi?.status,
+          history: oi?.history,
+          color: '#6366f1'
+        },
+        {
+          chartId: 'netflow',
+          title: 'BTC Exchange Netflow',
+          value: netflow?.value ?? '--',
+          status: netflow?.status || 'unavailable',
+          reason: netflow?.reason || 'Requires CryptoQuant API Key',
+          source: netflow?.source || 'CryptoQuant',
+          history: []
+        }
+      ];
+
+      flowCards.forEach(c => {
+        flowContainer.innerHTML += createCardHTML(c);
+      });
+      flowCards.forEach(c => {
+        if (c.history && c.history.length) {
+          renderSparkline(c.chartId, c.history, c.color);
+        }
+      });
+
+      // SECTION 6: COMMODITIES CARDS
+      const commContainer = document.getElementById('commodities-cards');
+      commContainer.innerHTML = '';
+      const gold = d.commodities?.gold;
+      const oil = d.commodities?.crude_oil;
+
+      const commCards = [
+        {
+          chartId: 'gold',
+          title: 'COMEX Gold (GC=F)',
+          value: gold?.current ? `$${Number(gold.current).toLocaleString('en-US')}` : '--',
+          change_1d: gold?.change_1d,
+          percentile_1y: gold?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: gold?.change_7d, display: formatChangePct(gold?.change_7d) },
+            { label: '30D', val: gold?.change_30d, display: formatChangePct(gold?.change_30d) }
+          ],
+          frequency: gold?.frequency || 'Daily',
+          updated: gold?.updated,
+          source: gold?.source || 'COMEX / CME',
+          status: gold?.status,
+          history: gold?.history,
+          color: '#fbbf24'
+        },
+        {
+          chartId: 'oil',
+          title: 'WTI Crude Oil (CL=F)',
+          value: oil?.current ? `$${oil.current}` : '--',
+          change_1d: oil?.change_1d,
+          percentile_1y: oil?.percentile_1y,
+          horizonItems: [
+            { label: '7D', val: oil?.change_7d, display: formatChangePct(oil?.change_7d) },
+            { label: '30D', val: oil?.change_30d, display: formatChangePct(oil?.change_30d) }
+          ],
+          frequency: oil?.frequency || 'Daily',
+          updated: oil?.updated,
+          source: oil?.source || 'NYMEX / CME',
+          status: oil?.status,
+          history: oil?.history,
+          color: '#a855f7'
+        }
+      ];
+
+      commCards.forEach(c => {
+        commContainer.innerHTML += createCardHTML(c);
+      });
+      commCards.forEach(c => renderSparkline(c.chartId, c.history, c.color));
+    }
+
+    async function initDashboard() {
+      try {
+        const res = await fetch('./data.json?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        globalData = await res.json();
+        renderDashboard();
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+        document.getElementById('header-updated-time').innerText = 'Data Error · Check data.json';
+      }
+    }
+
+    // Initialize on load
+    initDashboard();
   </script>
 </body>
 </html>

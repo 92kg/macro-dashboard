@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Macro Daily Dashboard — Liquidity, Rates, Capital Flow & BTC Regime</title>
+  <title>宏观每日监控看板 — 流动性、利率、资金流与BTC宏观状态</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,14 +55,14 @@
     <header class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-4 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
       <div class="flex items-center gap-3">
         <div class="h-11 w-11 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-xl">
-          M
+          宏
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">Macro Daily Dashboard</h1>
-            <span class="px-2 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">v2.1 Precision</span>
+            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">宏观每日监控看板</h1>
+            <span class="px-2 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">v2.1 精度版</span>
           </div>
-          <p class="text-xs md:text-sm text-slate-400 mt-0.5">Daily Macro Regime · Liquidity · Traditional Risk · Rates · Crypto Capital Flow</p>
+          <p class="text-xs md:text-sm text-slate-400 mt-0.5">每日宏观范式 · 美元流动性 · 传统风险溢价 · 利率曲线 · 加密资金流</p>
         </div>
       </div>
 
@@ -70,19 +70,19 @@
       <div class="flex flex-wrap items-center gap-3 text-xs">
         <!-- Time Window Filter -->
         <div class="flex items-center bg-slate-950/80 border border-slate-800 rounded-lg p-0.5" id="window-toggle">
-          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">RANGE:</span>
-          <button onclick="setTimeWindow(7)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="7">1W</button>
-          <button onclick="setTimeWindow(30)" class="window-btn px-2.5 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition" data-window="30">30D</button>
-          <button onclick="setTimeWindow(90)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="90">90D</button>
-          <button onclick="setTimeWindow(365)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="365">1Y</button>
+          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">周期:</span>
+          <button onclick="setTimeWindow(7)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="7">7日</button>
+          <button onclick="setTimeWindow(30)" class="window-btn px-2.5 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition" data-window="30">30日</button>
+          <button onclick="setTimeWindow(90)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="90">90日</button>
+          <button onclick="setTimeWindow(365)" class="window-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-window="365">1年</button>
         </div>
 
         <!-- Timezone Selector -->
         <div class="flex items-center bg-slate-950/80 border border-slate-800 rounded-lg p-0.5" id="tz-toggle">
-          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">TZ:</span>
+          <span class="px-2 py-1 text-slate-500 font-mono text-[11px]">时区:</span>
           <button onclick="setTimezone('UTC')" class="tz-btn px-2 py-1 rounded bg-slate-800 text-cyan-400 font-medium transition" data-tz="UTC">UTC</button>
-          <button onclick="setTimezone('Local')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="Local">Local</button>
-          <button onclick="setTimezone('America/New_York')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="America/New_York">NY (ET)</button>
+          <button onclick="setTimezone('Local')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="Local">本地</button>
+          <button onclick="setTimezone('America/New_York')" class="tz-btn px-2 py-1 rounded text-slate-400 hover:text-white transition" data-tz="America/New_York">美东 (ET)</button>
         </div>
 
         <!-- Refresh pill -->
@@ -91,7 +91,7 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span id="header-updated-time">Loading...</span>
+          <span id="header-updated-time">加载中...</span>
         </div>
       </div>
     </header>
@@ -102,12 +102,12 @@
         <div class="flex items-center gap-2">
           <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            10-Second Executive Macro Diagnosis
+            10秒宏观快速研判与预警
           </span>
-          <span class="text-[11px] text-slate-500 font-mono hidden sm:inline">Click any pill to inspect underlying metric</span>
+          <span class="text-[11px] text-slate-500 font-mono hidden sm:inline">点击任意指标可定位至下方详情卡片</span>
         </div>
         <span class="text-[10px] font-mono text-slate-400 cursor-pointer hover:text-cyan-400 transition" onclick="toggleDataQualityModal(true)" id="dq-header-status">
-          Live Data Quality Monitor
+          实时数据源健康度监控
         </span>
       </div>
 
@@ -124,10 +124,10 @@
         <div>
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-white tracking-wide uppercase">Macro Regime Matrix</span>
-              <span class="text-[11px] text-slate-500 font-mono">Multi-Dimensional (Level · Trend · Stress)</span>
+              <span class="text-sm font-bold text-white tracking-wide uppercase">宏观状态全景矩阵</span>
+              <span class="text-[11px] text-slate-500 font-mono">多维量化评估 (水平 · 趋势 · 压力)</span>
             </div>
-            <span class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700/50">Rule-Based Calibration</span>
+            <span class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700/50">客观规则校准</span>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4" id="regime-grid">
@@ -137,10 +137,10 @@
 
         <div class="mt-4 pt-3 border-t border-slate-800/70 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-slate-500">Summary:</span>
-            <span id="regime-summary-badge" class="font-medium text-slate-200">Evaluating macro drivers...</span>
+            <span class="text-slate-500">综合研判:</span>
+            <span id="regime-summary-badge" class="font-medium text-slate-200">正在评估宏观驱动因素...</span>
           </div>
-          <span class="text-[11px] text-slate-500 font-mono">Objective structural diagnosis (No financial advice)</span>
+          <span class="text-[11px] text-slate-500 font-mono">客观结构性分析 · 非投资建议</span>
         </div>
       </div>
 
@@ -149,22 +149,22 @@
         <div>
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-white tracking-wide uppercase">Market Divergence</span>
-              <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded" id="divergence-case-pill">EVALUATING</span>
+              <span class="text-sm font-bold text-white tracking-wide uppercase">跨市场宏观背离研判</span>
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded" id="divergence-case-pill">评估中</span>
             </div>
-            <span class="text-xs text-slate-500 font-mono">Statistical & Flow Shifts</span>
+            <span class="text-xs text-slate-500 font-mono">统计关联与资金异动</span>
           </div>
 
           <div class="mt-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80" id="divergence-container">
-            <div class="text-xs font-semibold text-cyan-400 mb-1" id="divergence-title">Cross-Market Alignment</div>
-            <div class="text-xs text-slate-300 leading-relaxed" id="divergence-message">Analyzing correlation divergence between DXY, Real Yields, TradFi risk equities, and BTC spot/leverage flows...</div>
+            <div class="text-xs font-semibold text-cyan-400 mb-1" id="divergence-title">跨市场基准对齐</div>
+            <div class="text-xs text-slate-300 leading-relaxed" id="divergence-message">正在分析美元指数、实际利率、传统风险资产与加密现货/杠杆资金流的相关性与背离状态...</div>
           </div>
 
           <!-- Rolling Pearson Correlation (30D vs 90D) -->
           <div class="mt-3">
             <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
-              <span>Rolling Pearson Correlations (BTC vs Macro)</span>
-              <span class="text-slate-500">30D vs 90D Window</span>
+              <span>滚动皮尔逊相关系数 (BTC 对比 宏观资产)</span>
+              <span class="text-slate-500">30天 vs 90天 窗口</span>
             </div>
             <div class="grid grid-cols-2 gap-2 text-[11px] font-mono" id="correlation-grid">
               <!-- Dynamically rendered rolling correlations -->
@@ -176,10 +176,10 @@
         <div class="mt-3 p-3 bg-gradient-to-r from-slate-950 to-slate-900 rounded-xl border border-slate-800 flex items-center justify-between">
           <div>
             <div class="flex items-center gap-1.5">
-              <span class="text-[11px] font-medium text-slate-400">US Net Liquidity Proxy</span>
-              <span class="text-[10px] text-cyan-400 bg-cyan-950/50 px-1.5 py-0.2 rounded border border-cyan-800/40">Fed BS - TGA - RRP</span>
+              <span class="text-[11px] font-medium text-slate-400">美元净流动性代理指标</span>
+              <span class="text-[10px] text-cyan-400 bg-cyan-950/50 px-1.5 py-0.2 rounded border border-cyan-800/40">美联储资产 - TGA - RRP</span>
             </div>
-            <div class="text-[10px] text-slate-500 font-mono">Domestic financial liquidity proxy (Wed snapshot)</div>
+            <div class="text-[10px] text-slate-500 font-mono">金融市场实际可用美元流动性测算 (周三快照)</div>
           </div>
           <div class="text-right">
             <div class="text-lg font-bold font-mono text-white" id="proxy-headline-val">--</div>
@@ -194,10 +194,10 @@
     <section class="space-y-3" id="sec-overview">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">1. Core Market Overview</h2>
-          <span class="text-xs text-slate-500">BTC Spot Close, Spot ETF Flows, Dollar Index (DXY) & Sentiment</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">1. 核心资产与市场情绪</h2>
+          <span class="text-xs text-slate-500">BTC 现货收盘、ETF 净流向、美元指数 (DXY) 与情绪指数</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Daily Snapshot</span>
+        <span class="text-xs font-mono text-slate-500">每日快照</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="overview-cards"></div>
     </section>
@@ -206,10 +206,10 @@
     <section class="space-y-3" id="sec-trad">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. Traditional Risk Assets & Credit</h2>
-          <span class="text-xs text-slate-500">S&P 500, Nasdaq 100, VIX Volatility & ICE BofA HY OAS Credit Spread</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. 传统风险资产与信用市场</h2>
+          <span class="text-xs text-slate-500">标普 500、纳斯达克 100、VIX 恐慌指数与美银高收益信用利差 (OAS)</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Equity & Credit Risk Premium</span>
+        <span class="text-xs font-mono text-slate-500">股票与信用风险溢价</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="trad-cards"></div>
     </section>
@@ -218,10 +218,10 @@
     <section class="space-y-3" id="sec-rates">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. Rates & Yield Curve</h2>
-          <span class="text-xs text-slate-500">Nominal 10Y/2Y, 10Y TIPS Real Yield, 10Y-2Y Curve & FOMC Target Range</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. 美债利率与收益率曲线</h2>
+          <span class="text-xs text-slate-500">名义 10Y/2Y、10Y TIPS 实际利率、10Y-2Y 期限利差与美联储目标利率</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Sovereign Debt Benchmark</span>
+        <span class="text-xs font-mono text-slate-500">主权债券基准</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="rates-cards"></div>
     </section>
@@ -230,10 +230,10 @@
     <section class="space-y-3" id="sec-liquidity">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">4. US Net Liquidity System</h2>
-          <span class="text-xs text-slate-500">Fed Assets (WALCL), TGA (WDTGAL), RRP (Daily), Bank Reserves & Net Liquidity Proxy</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">4. 美元净流动性体系</h2>
+          <span class="text-xs text-slate-500">美联储总资产 (WALCL)、财政部账户 (TGA)、隔夜逆回购 (RRP)、商业银行准备金与净流动性代理</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Central Bank Balance Sheet</span>
+        <span class="text-xs font-mono text-slate-500">央行资产负债表与资金池</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="liquidity-cards"></div>
     </section>
@@ -242,10 +242,10 @@
     <section class="space-y-3" id="sec-crypto-flow">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">5. Crypto Capital Flow & Leverage Structure</h2>
-          <span class="text-xs text-slate-500">Stablecoins, Binance BTC Perpetual Funding & Binance Open Interest</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">5. 加密资金流与衍生品杠杆结构</h2>
+          <span class="text-xs text-slate-500">稳定币流通市值、币安 BTC 永续资金费率与未平仓合约 (OI)</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Capital Flow & Derivatives Leverage</span>
+        <span class="text-xs font-mono text-slate-500">资金进出与衍生品杠杆</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="crypto-flow-cards"></div>
     </section>
@@ -254,10 +254,10 @@
     <section class="space-y-3" id="sec-commodities">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">6. Macro Commodities</h2>
-          <span class="text-xs text-slate-500">COMEX Gold & NYMEX WTI Crude Oil</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">6. 宏观大宗商品</h2>
+          <span class="text-xs text-slate-500">COMEX 黄金期货与 NYMEX WTI 原油期货</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">Inflation & Real Store of Value</span>
+        <span class="text-xs font-mono text-slate-500">通胀预期与硬通货储值</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="commodities-cards"></div>
     </section>
@@ -266,14 +266,14 @@
     <footer class="mt-12 border-t border-slate-800 pt-6 pb-12 text-slate-500 text-xs flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
-          <span class="font-bold text-slate-400">Macro Daily Dashboard</span>
+          <span class="font-bold text-slate-400">宏观每日监控看板</span>
           <span>·</span>
-          <span>Official Data Sources: Federal Reserve (FRED/H.4.1), U.S. Treasury, ICE, CBOE, Farside Investors, DefiLlama, Binance Futures</span>
+          <span>官方数据源: 美联储 (FRED/H.4.1)、美国财政部、洲际交易所 (ICE)、芝加哥期权交易所 (CBOE)、Farside Investors、DefiLlama、币安期货</span>
         </div>
-        <p class="text-[11px] text-slate-600">Strictly non-commercial research instrument. No financial advice or buy/sell signals generated.</p>
+        <p class="text-[11px] text-slate-600">严格定位非商业宏观投研工具。不构成任何买卖建议或投资建议。</p>
       </div>
       <div class="flex items-center gap-3 font-mono text-[11px]">
-        <button onclick="toggleDataQualityModal(true)" class="text-slate-400 hover:text-cyan-400 transition underline">View Data Quality Report</button>
+        <button onclick="toggleDataQualityModal(true)" class="text-slate-400 hover:text-cyan-400 transition underline">查看数据源健康度报告</button>
         <span>·</span>
         <a href="./data.json" target="_blank" class="text-cyan-400 hover:underline">data.json</a>
       </div>
@@ -286,14 +286,14 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-2">
-          <h3 class="text-base font-bold text-white tracking-wide">Data Quality & Health Audit</h3>
+          <h3 class="text-base font-bold text-white tracking-wide">数据源质量与健康度审计</h3>
           <span class="px-2 py-0.5 text-xs font-mono rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="modal-dq-summary">--</span>
         </div>
         <button onclick="toggleDataQualityModal(false)" class="text-slate-400 hover:text-white text-lg font-mono">✕</button>
       </div>
 
       <div class="text-xs text-slate-400">
-        Every metric is tracked and grounded in verifiable data feeds. Outages, stale caches, and missing API credentials are transparently reported below without simulated values.
+        所有指标均基于官方真实数据源追踪。服务异常、缓存延迟或缺失 API 密钥均在此透明展示，严禁伪造虚假模拟数据。
       </div>
 
       <div class="overflow-y-auto custom-scrollbar flex-1 pr-1" id="modal-dq-list">
@@ -301,8 +301,8 @@
       </div>
 
       <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-        <span>Grounded Data Integrity Standard</span>
-        <button onclick="toggleDataQualityModal(false)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">Close</button>
+        <span>真实数据完整性标准</span>
+        <button onclick="toggleDataQualityModal(false)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">关闭</button>
       </div>
     </div>
   </div>
@@ -313,6 +313,118 @@
     let selectedTimezone = 'UTC';
     let selectedDays = 30;
     const chartInstances = {};
+
+    // Chinese translation dictionaries
+    const REGIME_MAP = {
+      'Strong': '强势 (流动性承压)',
+      'Weak': '偏弱 (流动性偏松)',
+      'Moderate': '温和中性',
+      'Rising': '走高 (估值承压)',
+      'Falling': '回落 (估值改善)',
+      'Expanding': '扩张 (流动性注入)',
+      'Contracting': '收缩 (流动性抽水)',
+      'Risk-On': '风险偏好走强 (Risk-On)',
+      'Risk-Off': '避险防御模式 (Risk-Off)',
+      'Healthy': '健康 (违约风险低)',
+      'Stress': '承压 (利差走阔)',
+      'Inflow': '持续净流入',
+      'Outflow': '净流出',
+      'Neutral': '常态中性',
+      'Elevated': '偏高 / 过热',
+      'Low': '偏低 / 去杠杆',
+      'Normal': '平稳正常',
+      'Unavailable': '未连接数据'
+    };
+
+    const HEAT_MAP = {
+      'Elevated': '高杠杆 (过热)',
+      'Normal': '常态合理',
+      'Low': '低杠杆 (冷静)',
+      'Unknown': '未知'
+    };
+
+    const CATEGORY_MAP = {
+      'Crypto Spot': '加密现货',
+      'Currency': '外汇汇率',
+      'Equities': '权益资产',
+      'Volatility': '市场波动率',
+      'Commodities': '大宗商品',
+      'Rates': '美债利率',
+      'Policy': '货币政策',
+      'Credit': '信用债市场',
+      'Liquidity': '美元流动性',
+      'Crypto Capital Flow': '加密资金流',
+      'Crypto Leverage': '加密衍生杠杆',
+      'Sentiment': '市场情绪'
+    };
+
+    const FREQ_MAP = {
+      'Daily': '每日',
+      'Weekly': '每周',
+      'Weekly (Wed)': '每周三',
+      'Weekly (Wed snapshot)': '周三快照',
+      'Weekly (H.4.1)': '每周 (H.4.1表)',
+      'Daily (FOMC)': '每日 / 议息决议',
+      'Daily / FOMC Decision': '每日 / 议息决议',
+      'Daily (T+1)': '次日 (T+1)',
+      '8 Hours': '8小时',
+      '8-Hour': '8小时',
+      '8-Hour Funding': '8小时资金费',
+      '24H': '24小时',
+      'Monthly': '月度'
+    };
+
+    const STATUS_MAP = {
+      'ok': '正常',
+      'stale': '缓存延迟',
+      'unavailable': '未接入'
+    };
+
+    const FNG_MAP = {
+      'Extreme Greed': '极度贪婪',
+      'Greed': '贪婪',
+      'Neutral': '中性',
+      'Fear': '恐慌',
+      'Extreme Fear': '极度恐慌'
+    };
+
+    function translateRegime(val) {
+      if (!val) return '--';
+      return REGIME_MAP[val] || val;
+    }
+
+    function translateHeat(val) {
+      if (!val) return '--';
+      return HEAT_MAP[val] || val;
+    }
+
+    function translateCategory(val) {
+      return CATEGORY_MAP[val] || val || '综合';
+    }
+
+    function translateFrequency(val) {
+      return FREQ_MAP[val] || val || '日更';
+    }
+
+    function translateStatus(val) {
+      return STATUS_MAP[val] || (val ? val.toUpperCase() : '未知');
+    }
+
+    function translateTrend(trend) {
+      if (!trend) return '--';
+      if (trend === 'Rising') return '走高';
+      if (trend === 'Falling') return '回落';
+      if (trend === 'Flat') return '走平';
+      return trend;
+    }
+
+    function translateStress(stress) {
+      if (!stress) return '--';
+      if (stress === 'High') return '高';
+      if (stress === 'Moderate') return '中等';
+      if (stress === 'Low') return '低';
+      return stress;
+    }
 
     function toggleDataQualityModal(show) {
       const modal = document.getElementById('dq-modal');
@@ -369,7 +481,7 @@
         }
         
         if (formatType === 'time') {
-          return d.toLocaleString('zh-CN', { ...tzOpt, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' ' + (selectedTimezone === 'America/New_York' ? 'ET' : selectedTimezone);
+          return d.toLocaleString('zh-CN', { ...tzOpt, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' ' + (selectedTimezone === 'America/New_York' ? '美东' : selectedTimezone);
         }
         return d.toLocaleDateString('zh-CN', { ...tzOpt, month: 'short', day: 'numeric' });
       } catch (e) {
@@ -406,17 +518,26 @@
       const divCase = d.market_divergence?.[0]?.case_id || 'Neutral';
       const dq = d.data_quality;
 
+      const divLabelMap = {
+        'Case A': '逆风吸收',
+        'Case B': '顺风共振',
+        'Case C': '杠杆虚火',
+        'Case D': '信用背离',
+        'Shift-Corr': '脱钩解耦',
+        'Neutral': '基准对齐'
+      };
+
       const items = [
-        { q: '1. BTC Price', a: btc ? `$${Number(btc.current).toLocaleString()} (${formatChangePct(btc.change_1d)})` : '--', target: 'btc', tone: (btc?.change_1d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '2. ETF Flow', a: etf ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M (7D ${etf.flow_7d_bil >= 0 ? '+' : ''}${etf.flow_7d_bil}B)` : '--', target: 'etf-flow', tone: (etf?.flow_7d_bil ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '3. USD', a: dxy ? `${dxy.current} (${d.macro_regime?.usd})` : '--', target: 'dxy', tone: d.macro_regime?.usd === 'Strong' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
-        { q: '4. Real Yield', a: real10y ? `${real10y.current}% (${d.macro_regime?.real_yield})` : '--', target: 'real10y', tone: d.macro_regime?.real_yield === 'Rising' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
-        { q: '5. US Liquidity', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '6. Equities', a: d.macro_regime?.equities || 'Risk-Off', target: 'spx', tone: d.macro_regime?.equities === 'Risk-On' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
-        { q: '7. Credit Stress', a: hy ? `${hy.current}% (${d.macro_regime?.credit})` : '--', target: 'hy-spread', tone: d.macro_regime?.credit === 'Healthy' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '8. Crypto Leverage', a: funding?.status === 'ok' ? `${funding.heat} (${funding.annualized_pct}% Ann.)` : (d.macro_regime?.crypto_leverage || 'Unavailable'), target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : (d.macro_regime?.crypto_leverage === 'Unavailable' ? 'bg-slate-800/60 text-slate-400 border-slate-700' : 'bg-slate-800 text-slate-300 border-slate-700') },
-        { q: '9. Divergence', a: divCase, target: 'btc', tone: divCase !== 'Neutral' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-slate-800 text-slate-400 border-slate-700' },
-        { q: '10. Data Quality', a: dq ? dq.summary : '100%', target: 'modal', isModalTrigger: true, tone: dq?.health_state === 'Optimal' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' },
+        { q: '1. BTC现货', a: btc ? `$${Number(btc.current).toLocaleString()} (${formatChangePct(btc.change_1d)})` : '--', target: 'btc', tone: (btc?.change_1d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '2. 现货ETF', a: etf ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M (7日 ${etf.flow_7d_bil >= 0 ? '+' : ''}${etf.flow_7d_bil}B)` : '--', target: 'etf-flow', tone: (etf?.flow_7d_bil ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '3. 美元指数', a: dxy ? `${dxy.current} (${translateRegime(d.macro_regime?.usd)})` : '--', target: 'dxy', tone: d.macro_regime?.usd === 'Strong' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '4. 实际利率', a: real10y ? `${real10y.current}% (${translateRegime(d.macro_regime?.real_yield)})` : '--', target: 'real10y', tone: d.macro_regime?.real_yield === 'Rising' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '5. 美元净流动性', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '6. 美股风险偏好', a: translateRegime(d.macro_regime?.equities) || '避险防御', target: 'spx', tone: d.macro_regime?.equities === 'Risk-On' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
+        { q: '7. 信用利差压力', a: hy ? `${hy.current}% (${translateRegime(d.macro_regime?.credit)})` : '--', target: 'hy-spread', tone: d.macro_regime?.credit === 'Healthy' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '8. 加密合约杠杆', a: funding?.status === 'ok' ? `${translateHeat(funding.heat)} (${funding.annualized_pct}% 年化)` : (translateRegime(d.macro_regime?.crypto_leverage) || '未连接'), target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : (d.macro_regime?.crypto_leverage === 'Unavailable' ? 'bg-slate-800/60 text-slate-400 border-slate-700' : 'bg-slate-800 text-slate-300 border-slate-700') },
+        { q: '9. 跨市场背离', a: divLabelMap[divCase] || divCase, target: 'btc', tone: divCase !== 'Neutral' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-slate-800 text-slate-400 border-slate-700' },
+        { q: '10. 数据完整度', a: dq ? dq.summary : '100%', target: 'modal', isModalTrigger: true, tone: dq?.health_state === 'Optimal' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' },
       ];
 
       strip.innerHTML = items.map(it => `
@@ -436,45 +557,45 @@
 
       const items = [
         { 
-          label: 'USD (DXY)', 
-          val: regime.usd, 
-          sub: dims.usd ? `Lvl: ${dims.usd.level} · Tr: ${dims.usd.trend}` : '',
+          label: '美元指数 (DXY)', 
+          val: translateRegime(regime.usd), 
+          sub: dims.usd ? `指数水平: ${dims.usd.level} · 趋势: ${translateTrend(dims.usd.trend)}` : '',
           tone: regime.usd === 'Strong' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' 
         },
         { 
-          label: '10Y Real Yield', 
-          val: regime.real_yield, 
-          sub: dims.real_yield ? `Lvl: ${dims.real_yield.level} · Stress: ${dims.real_yield.stress}` : '',
+          label: '10Y 实际利率 (TIPS)', 
+          val: translateRegime(regime.real_yield), 
+          sub: dims.real_yield ? `实际利率: ${dims.real_yield.level} · 估值压力: ${translateStress(dims.real_yield.stress)}` : '',
           tone: regime.real_yield === 'Rising' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' 
         },
         { 
-          label: 'US Net Liquidity', 
-          val: regime.liquidity, 
-          sub: dims.liquidity ? `30D: ${dims.liquidity.change_30d >= 0 ? '+' : ''}${dims.liquidity.change_30d}%` : '',
+          label: '美元净流动性', 
+          val: translateRegime(regime.liquidity), 
+          sub: dims.liquidity ? `30日净变动: ${dims.liquidity.change_30d >= 0 ? '+' : ''}${dims.liquidity.change_30d}%` : '',
           tone: regime.liquidity === 'Expanding' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
         },
         { 
-          label: 'TradFi Equities', 
-          val: regime.equities, 
-          sub: dims.equities ? `VIX: ${dims.equities.vix_current || '--'}` : '',
+          label: '传统权益资产 (美股)', 
+          val: translateRegime(regime.equities), 
+          sub: dims.equities ? `当前VIX: ${dims.equities.vix_current || '--'}` : '',
           tone: regime.equities === 'Risk-On' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/30 text-amber-400 bg-amber-500/10' 
         },
         { 
-          label: 'Credit Market', 
-          val: regime.credit, 
-          sub: dims.credit ? `OAS: ${dims.credit.current_spread}%` : '',
+          label: '信用债市场 (HY利差)', 
+          val: translateRegime(regime.credit), 
+          sub: dims.credit ? `当前利差: ${dims.credit.current_spread}%` : '',
           tone: regime.credit === 'Healthy' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
         },
         { 
-          label: 'BTC ETF Flow', 
-          val: regime.btc_etf_flow, 
-          sub: dims.btc_etf_flow ? `7D: ${dims.btc_etf_flow.flow_7d_mil >= 0 ? '+' : ''}$${dims.btc_etf_flow.flow_7d_mil}M` : '',
+          label: 'BTC 现货ETF流向', 
+          val: translateRegime(regime.btc_etf_flow), 
+          sub: dims.btc_etf_flow ? `7日净流入: ${dims.btc_etf_flow.flow_7d_mil >= 0 ? '+' : ''}$${dims.btc_etf_flow.flow_7d_mil}M` : '',
           tone: regime.btc_etf_flow === 'Inflow' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-rose-500/10' 
         },
         { 
-          label: 'Crypto Leverage', 
-          val: regime.crypto_leverage, 
-          sub: dims.crypto_leverage ? (dims.crypto_leverage.funding_annualized ? `${dims.crypto_leverage.funding_annualized}% Ann.` : 'Binance Data') : '',
+          label: '加密衍生品杠杆', 
+          val: translateRegime(regime.crypto_leverage), 
+          sub: dims.crypto_leverage ? (dims.crypto_leverage.funding_annualized ? `年化资金费率: ${dims.crypto_leverage.funding_annualized}%` : '币安合约实时流') : '',
           tone: regime.crypto_leverage === 'Elevated' ? 'border-rose-500/30 text-rose-400 bg-rose-500/10' : (regime.crypto_leverage === 'Unavailable' ? 'border-slate-800 text-slate-500 bg-slate-900/40' : 'border-slate-700 text-slate-300 bg-slate-800/40') 
         },
       ];
@@ -492,7 +613,38 @@
         container.appendChild(el);
       });
 
-      document.getElementById('regime-summary-badge').innerText = regime.summary || 'Macro calibration complete.';
+      // Format summary badge in Chinese if needed
+      let summaryText = regime.summary;
+      if (!summaryText) {
+        const parts = [];
+        if (regime.liquidity && regime.liquidity !== 'Unavailable') parts.push(`流动性${translateRegime(regime.liquidity).slice(0, 2)}`);
+        if (regime.usd && regime.usd !== 'Unavailable') parts.push(`美元${translateRegime(regime.usd).slice(0, 2)}`);
+        if (regime.real_yield && regime.real_yield !== 'Unavailable') parts.push(`实际利率${translateRegime(regime.real_yield).slice(0, 2)}`);
+        if (regime.equities && regime.equities !== 'Unavailable') parts.push(`美股${translateRegime(regime.equities).slice(0, 4)}`);
+        if (regime.btc_etf_flow && regime.btc_etf_flow !== 'Unavailable') parts.push(`ETF${translateRegime(regime.btc_etf_flow)}`);
+        summaryText = parts.length ? parts.join(' · ') : '宏观量化评估完毕。';
+      } else {
+        summaryText = summaryText
+          .replace(/Expanding Liquidity/g, '流动性扩张')
+          .replace(/Contracting Liquidity/g, '流动性收紧')
+          .replace(/Strong USD/g, '美元强势')
+          .replace(/Weak USD/g, '美元偏弱')
+          .replace(/Moderate USD/g, '美元温和')
+          .replace(/Rising Real Yield/g, '实际利率上行')
+          .replace(/Falling Real Yield/g, '实际利率回落')
+          .replace(/Healthy Credit/g, '信用利差健康')
+          .replace(/Stress Credit/g, '信用利差承压')
+          .replace(/Risk-On Equities/g, '美股风险偏好上升')
+          .replace(/Risk-Off Equities/g, '美股避险情绪主导')
+          .replace(/ETF Inflow/g, 'ETF资金净流入')
+          .replace(/ETF Outflow/g, 'ETF资金净流出')
+          .replace(/Leverage Normal/g, '衍生品杠杆平稳')
+          .replace(/Leverage Elevated/g, '衍生品杠杆偏高')
+          .replace(/Leverage Low/g, '衍生品低杠杆')
+          .replace(/Leverage Unavailable/g, '杠杆数据未接通');
+      }
+
+      document.getElementById('regime-summary-badge').innerText = summaryText;
     }
 
     function renderDivergence(divList, correlations) {
@@ -503,31 +655,55 @@
       const title = document.getElementById('divergence-title');
       const msg = document.getElementById('divergence-message');
 
-      pill.innerText = active.case_id || 'NEUTRAL';
       if (active.case_id === 'Case A') {
+        pill.innerText = '逆风吸收背离';
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        title.innerText = '【正向背离】宏观逆风吸收 (资产走强)';
+        msg.innerText = active.message.includes('absorbing capital') 
+          ? 'BTC 在美元指数走强且美债实际利率上行的宏观逆风环境下逆势吸金上涨，表现出显著的结构性走强特征。'
+          : active.message;
       } else if (active.case_id === 'Case B') {
+        pill.innerText = '宏观顺风共振';
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        title.innerText = '【顺风共振】宏观流动性转松与现货ETF共振';
+        msg.innerText = active.message.includes('liquidity easing')
+          ? '宏观环境趋于宽松（美元/实际利率回落）叠加机构现货 ETF 资金持续净流入，形成多重利好顺风共振。'
+          : active.message;
       } else if (active.case_id === 'Case C') {
+        pill.innerText = '杠杆虚火预警';
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        title.innerText = '【脆弱预警】高杠杆攀升与现货资金流出背离';
+        msg.innerText = active.message.includes('derivatives leverage')
+          ? '资产上涨过度依赖高频衍生品杠杆累积，而机构现货 ETF 呈现净流出，合约结构高度脆弱，警惕多头挤压闪崩风险！'
+          : active.message;
+      } else if (active.case_id === 'Case D') {
+        pill.innerText = '信用债务背离';
+        pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        title.innerText = '【债务预警】高收益债信用利差与权益市场背离';
+        msg.innerText = active.message.includes('High yield credit')
+          ? '高收益企业债信用利差明显走阔，反映债务与融资压力加剧，而股市估值依旧坚挺，存在信用溢价修复风险。'
+          : active.message;
       } else if (active.case_id === 'Shift-Corr') {
+        pill.innerText = '相关性解耦';
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        title.innerText = '【统计解耦】BTC 与传统科技股相关性断裂';
+        msg.innerText = 'BTC 与纳斯达克 100 指数的 30 日滚动相关系数大幅脱钩，加密资产在此窗口期呈现统计上的独立定价走势。';
       } else {
+        pill.innerText = '常规基准对齐';
         pill.className = 'px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-800 text-slate-400 border border-slate-700';
+        title.innerText = '跨市场基准常态协同';
+        msg.innerText = '各大类资产关联度与流动性指标均处于历史常规区间，当前无急性跨市场异常背离。';
       }
-
-      title.innerText = (active.type ? `[${active.type}] ` : '') + (active.name || 'Macro Alignment');
-      msg.innerText = active.message || 'Relationships operating in baseline historical range.';
 
       // Render Rolling Correlation Grid
       const corrGrid = document.getElementById('correlation-grid');
       if (corrGrid && correlations) {
         corrGrid.innerHTML = '';
         const pairs = [
-          { name: 'BTC / Nasdaq 100', c: correlations.btc_nasdaq },
-          { name: 'BTC / US Dollar (DXY)', c: correlations.btc_dxy },
-          { name: 'BTC / 10Y Real Yield', c: correlations.btc_real_yield },
-          { name: 'BTC / COMEX Gold', c: correlations.btc_gold }
+          { name: 'BTC / 纳斯达克 100', c: correlations.btc_nasdaq },
+          { name: 'BTC / 美元指数 (DXY)', c: correlations.btc_dxy },
+          { name: 'BTC / 10Y 实际利率', c: correlations.btc_real_yield },
+          { name: 'BTC / COMEX 黄金', c: correlations.btc_gold }
         ];
 
         pairs.forEach(p => {
@@ -537,10 +713,10 @@
           const el = document.createElement('div');
           el.className = 'p-1.5 rounded bg-slate-950 border border-slate-800 flex items-center justify-between';
           el.innerHTML = `
-            <span class="text-slate-400 text-[10px] truncate max-w-[100px]">${p.name}:</span>
+            <span class="text-slate-400 text-[10px] truncate max-w-[110px]">${p.name}:</span>
             <div class="space-x-1.5">
-              <span class="${color30} font-bold">${c30 != null ? (c30 >= 0 ? '+' : '') + c30.toFixed(2) : '--'} (30D)</span>
-              <span class="text-slate-500 text-[10px]">${c90 != null ? (c90 >= 0 ? '+' : '') + c90.toFixed(2) : '--'} (90D)</span>
+              <span class="${color30} font-bold">${c30 != null ? (c30 >= 0 ? '+' : '') + c30.toFixed(2) : '--'} (30日)</span>
+              <span class="text-slate-500 text-[10px]">${c90 != null ? (c90 >= 0 ? '+' : '') + c90.toFixed(2) : '--'} (90日)</span>
             </div>
           `;
           corrGrid.appendChild(el);
@@ -550,8 +726,8 @@
 
     function renderDataQualityModal(dq) {
       if (!dq) return;
-      document.getElementById('modal-dq-summary').innerText = dq.summary;
-      document.getElementById('dq-header-status').innerText = `Health: ${dq.summary}`;
+      document.getElementById('modal-dq-summary').innerText = `健康度评分: ${dq.summary}`;
+      document.getElementById('dq-header-status').innerText = `数据源健康度: ${dq.summary}`;
 
       const list = document.getElementById('modal-dq-list');
       if (!list) return;
@@ -560,28 +736,28 @@
         <table class="w-full text-[11px] font-mono text-left">
           <thead>
             <tr class="text-slate-500 border-b border-slate-800 pb-1">
-              <th class="py-1">Metric</th>
-              <th class="py-1">Category</th>
-              <th class="py-1">Status</th>
-              <th class="py-1">Frequency</th>
-              <th class="py-1 text-right">Source</th>
+              <th class="py-1">监控指标</th>
+              <th class="py-1">资产类别</th>
+              <th class="py-1">实时状态</th>
+              <th class="py-1">更新频次</th>
+              <th class="py-1 text-right">来源渠道</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/40">
             ${dq.metrics.map(m => `
               <tr class="hover:bg-slate-800/20">
                 <td class="py-1.5 text-slate-200 font-semibold">${m.name}</td>
-                <td class="py-1.5 text-slate-400">${m.category}</td>
+                <td class="py-1.5 text-slate-400">${translateCategory(m.category)}</td>
                 <td class="py-1.5">
                   <span class="px-1.5 py-0.2 rounded text-[10px] ${
                     m.status === 'ok' 
                       ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' 
                       : (m.status === 'stale' ? 'bg-amber-950 text-amber-400 border border-amber-800/40' : 'bg-rose-950 text-rose-400 border border-rose-800/40')
                   }">
-                    ${m.status.toUpperCase()}
+                    ${translateStatus(m.status)}
                   </span>
                 </td>
-                <td class="py-1.5 text-slate-400">${m.frequency}</td>
+                <td class="py-1.5 text-slate-400">${translateFrequency(m.frequency)}</td>
                 <td class="py-1.5 text-slate-500 text-right truncate max-w-[140px]">${m.source}</td>
               </tr>
             `).join('')}
@@ -597,11 +773,11 @@
 
       let staleBadge = '';
       if (cfg.status === 'unavailable') {
-        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-rose-950/40 text-rose-400 border border-rose-800/30">Unavailable</span>`;
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-rose-950/40 text-rose-400 border border-rose-800/30">暂不可用</span>`;
       } else if (cfg.status === 'stale') {
-        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-amber-950/40 text-amber-400 border border-amber-800/30">${cfg.stale_label || 'Stale Cache'}</span>`;
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-amber-950/40 text-amber-400 border border-amber-800/30">${cfg.stale_label || '缓存数据'}</span>`;
       } else {
-        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700/50">${cfg.frequency || 'Daily'}</span>`;
+        staleBadge = `<span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700/50">${translateFrequency(cfg.frequency)}</span>`;
       }
 
       let multiHorizonHTML = '';
@@ -625,7 +801,7 @@
         percentileMeterHTML = `
           <div class="mt-2.5 pt-2 border-t border-slate-800/60">
             <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
-              <span class="text-slate-500">1Y Percentile Rank:</span>
+              <span class="text-slate-500">1年期历史分位:</span>
               <span class="text-cyan-400 font-semibold">${pct}%</span>
             </div>
             <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
@@ -657,7 +833,7 @@
                   ${changeText}
                 </div>
               ` : `
-                <div class="text-[11px] text-slate-500 font-mono italic">${cfg.reason || 'Unavailable'}</div>
+                <div class="text-[11px] text-slate-500 font-mono italic">${cfg.reason || '数据源未激活'}</div>
               `}
             </div>
 
@@ -675,7 +851,7 @@
           <div class="mt-3">
             <div class="h-16 w-full ${cfg.status === 'unavailable' ? 'opacity-20 flex items-center justify-center border border-dashed border-slate-800 rounded' : ''}">
               ${cfg.status === 'unavailable' ? `
-                <span class="text-[11px] text-slate-600 font-mono">Data Feed Inactive</span>
+                <span class="text-[11px] text-slate-600 font-mono">数据流未激活</span>
               ` : `
                 <canvas id="chart-${cfg.chartId}"></canvas>
               `}
@@ -683,8 +859,8 @@
 
             <!-- Card Footer -->
             <div class="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-              <span title="Updated">${formatDate(cfg.updated)}</span>
-              <span title="Data Source" class="text-slate-500 hover:text-slate-400 truncate max-w-[150px]">${cfg.source || 'Official'}</span>
+              <span title="最新数据日期">${formatDate(cfg.updated)}</span>
+              <span title="官方数据源" class="text-slate-500 hover:text-slate-400 truncate max-w-[150px]">${cfg.source || '官方渠道'}</span>
             </div>
           </div>
         </div>
@@ -726,7 +902,7 @@
               legend: { display: false },
               tooltip: {
                 callbacks: {
-                  label: (c) => `Net Flow: ${c.raw >= 0 ? '+' : ''}${c.raw}M`
+                  label: (c) => `净流向: ${c.raw >= 0 ? '+' : ''}${c.raw}M`
                 }
               }
             },
@@ -764,7 +940,7 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (c) => `Value: ${c.raw}`
+                label: (c) => `数值: ${c.raw}`
               }
             }
           },
@@ -800,7 +976,7 @@
         const ch = proxy.change_30d;
         const color = ch >= 0 ? 'text-emerald-400' : 'text-rose-400';
         document.getElementById('proxy-headline-change').className = `text-xs font-mono font-medium ${color}`;
-        document.getElementById('proxy-headline-change').innerText = `30D: ${ch >= 0 ? '+' : ''}${ch}%`;
+        document.getElementById('proxy-headline-change').innerText = `30日变化: ${ch >= 0 ? '+' : ''}${ch}%`;
       }
 
       // SECTION 1: OVERVIEW CARDS
@@ -814,13 +990,13 @@
       const ovCards = [
         {
           chartId: 'btc',
-          title: 'Bitcoin (BTC / USD)',
+          title: '比特币现货 (BTC / USD)',
           value: btc?.current ? `$${Number(btc.current).toLocaleString('en-US')}` : '--',
           change_1d: btc?.change_1d,
           percentile_1y: btc?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: btc?.change_7d, display: formatChangePct(btc?.change_7d) },
-            { label: '30D', val: btc?.change_30d, display: formatChangePct(btc?.change_30d) }
+            { label: '7日', val: btc?.change_7d, display: formatChangePct(btc?.change_7d) },
+            { label: '30日', val: btc?.change_30d, display: formatChangePct(btc?.change_30d) }
           ],
           frequency: 'Daily',
           updated: btc?.updated,
@@ -831,14 +1007,14 @@
         },
         {
           chartId: 'etf-flow',
-          title: 'BTC Spot ETF Net Flow',
+          title: 'BTC 现货 ETF 净流入/出',
           value: etf?.today_net_mil != null ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M` : '--',
-          change_1d_text: `7D: ${etf?.flow_7d_bil != null ? (etf.flow_7d_bil >= 0 ? '+' : '') + etf.flow_7d_bil + 'B' : '--'}`,
+          change_1d_text: `7日累计: ${etf?.flow_7d_bil != null ? (etf.flow_7d_bil >= 0 ? '+' : '') + etf.flow_7d_bil + 'B' : '--'}`,
           isPositive: (etf?.flow_7d_bil ?? 0) >= 0,
           horizonItems: [
-            { label: '7D Net', val: etf?.flow_7d_mil, display: `${etf?.flow_7d_bil >= 0 ? '+' : ''}${etf?.flow_7d_bil}B` },
-            { label: '30D Net', val: etf?.flow_30d_mil, display: `${etf?.flow_30d_bil >= 0 ? '+' : ''}${etf?.flow_30d_bil}B` },
-            { label: 'IBIT', val: etf?.latest_breakdown?.ibit, display: `${etf?.latest_breakdown?.ibit >= 0 ? '+' : ''}${etf?.latest_breakdown?.ibit}M` }
+            { label: '7日净额', val: etf?.flow_7d_mil, display: `${etf?.flow_7d_bil >= 0 ? '+' : ''}${etf?.flow_7d_bil}B` },
+            { label: '30日净额', val: etf?.flow_30d_mil, display: `${etf?.flow_30d_bil >= 0 ? '+' : ''}${etf?.flow_30d_bil}B` },
+            { label: '贝莱德 IBIT', val: etf?.latest_breakdown?.ibit, display: `${etf?.latest_breakdown?.ibit >= 0 ? '+' : ''}${etf?.latest_breakdown?.ibit}M` }
           ],
           frequency: etf?.frequency || 'Daily (T+1)',
           updated: etf?.updated,
@@ -849,13 +1025,13 @@
         },
         {
           chartId: 'dxy',
-          title: 'US Dollar Index (DXY)',
+          title: '美元指数 (DXY)',
           value: dxy?.current ?? '--',
           change_1d: dxy?.change_1d,
           percentile_1y: dxy?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: dxy?.change_7d, display: formatChangePct(dxy?.change_7d) },
-            { label: '30D', val: dxy?.change_30d, display: formatChangePct(dxy?.change_30d) }
+            { label: '7日', val: dxy?.change_7d, display: formatChangePct(dxy?.change_7d) },
+            { label: '30日', val: dxy?.change_30d, display: formatChangePct(dxy?.change_30d) }
           ],
           frequency: 'Daily',
           updated: dxy?.updated,
@@ -866,15 +1042,15 @@
         },
         {
           chartId: 'fng',
-          title: 'Crypto Fear & Greed',
+          title: '加密市场恐慌与贪婪指数',
           value: fng?.current ?? '--',
-          change_1d_text: fng?.classification ?? '--',
+          change_1d_text: FNG_MAP[fng?.classification] || fng?.classification || '--',
           isPositive: (fng?.current ?? 0) >= 50,
           percentile_1y: fng?.current != null ? Number(fng.current) : null,
           horizonItems: [
-            { label: '1D', val: fng?.change_1d, display: `${fng?.change_1d >= 0 ? '+' : ''}${fng?.change_1d}` },
-            { label: '7D', val: fng?.change_7d, display: `${fng?.change_7d >= 0 ? '+' : ''}${fng?.change_7d}` },
-            { label: '30D', val: fng?.change_30d, display: `${fng?.change_30d >= 0 ? '+' : ''}${fng?.change_30d}` }
+            { label: '1日变化', val: fng?.change_1d, display: `${fng?.change_1d >= 0 ? '+' : ''}${fng?.change_1d}` },
+            { label: '7日变化', val: fng?.change_7d, display: `${fng?.change_7d >= 0 ? '+' : ''}${fng?.change_7d}` },
+            { label: '30日变化', val: fng?.change_30d, display: `${fng?.change_30d >= 0 ? '+' : ''}${fng?.change_30d}` }
           ],
           frequency: fng?.frequency || 'Daily',
           updated: fng?.updated,
@@ -902,13 +1078,13 @@
       const tradCards = [
         {
           chartId: 'spx',
-          title: 'S&P 500 (SPX)',
+          title: '标普 500 指数 (SPX)',
           value: spx?.current ? Number(spx.current).toLocaleString('en-US') : '--',
           change_1d: spx?.change_1d,
           percentile_1y: spx?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: spx?.change_7d, display: formatChangePct(spx?.change_7d) },
-            { label: '30D', val: spx?.change_30d, display: formatChangePct(spx?.change_30d) }
+            { label: '7日', val: spx?.change_7d, display: formatChangePct(spx?.change_7d) },
+            { label: '30日', val: spx?.change_30d, display: formatChangePct(spx?.change_30d) }
           ],
           frequency: 'Daily',
           updated: spx?.updated,
@@ -919,13 +1095,13 @@
         },
         {
           chartId: 'ndx',
-          title: 'Nasdaq 100 (NDX)',
+          title: '纳斯达克 100 指数 (NDX)',
           value: ndx?.current ? Number(ndx.current).toLocaleString('en-US') : '--',
           change_1d: ndx?.change_1d,
           percentile_1y: ndx?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: ndx?.change_7d, display: formatChangePct(ndx?.change_7d) },
-            { label: '30D', val: ndx?.change_30d, display: formatChangePct(ndx?.change_30d) }
+            { label: '7日', val: ndx?.change_7d, display: formatChangePct(ndx?.change_7d) },
+            { label: '30日', val: ndx?.change_30d, display: formatChangePct(ndx?.change_30d) }
           ],
           frequency: 'Daily',
           updated: ndx?.updated,
@@ -936,14 +1112,14 @@
         },
         {
           chartId: 'vix',
-          title: 'VIX Volatility Index',
+          title: 'VIX 市场恐慌指数',
           value: vix?.current ?? '--',
           change_1d: vix?.change_1d,
           isPositive: (vix?.change_1d ?? 0) <= 0,
           percentile_1y: vix?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: vix?.change_7d, display: formatChangePct(vix?.change_7d) },
-            { label: '30D', val: vix?.change_30d, display: formatChangePct(vix?.change_30d) }
+            { label: '7日', val: vix?.change_7d, display: formatChangePct(vix?.change_7d) },
+            { label: '30日', val: vix?.change_30d, display: formatChangePct(vix?.change_30d) }
           ],
           frequency: 'Daily',
           updated: vix?.updated,
@@ -954,14 +1130,14 @@
         },
         {
           chartId: 'hy-spread',
-          title: 'HY Credit Spread (OAS)',
+          title: '高收益信用利差 (OAS)',
           value: hy?.current != null ? `${hy.current}%` : '--',
           change_1d_text: hy?.change_1w_bp != null ? formatChangeBp(hy.change_1w_bp) : '--',
           isPositive: (hy?.change_1w_bp ?? 0) <= 0,
           percentile_1y: hy?.percentile_1y,
           horizonItems: [
-            { label: '1W bp', val: hy?.change_1w_bp, display: formatChangeBp(hy?.change_1w_bp) },
-            { label: '1M bp', val: hy?.change_1m_bp, display: formatChangeBp(hy?.change_1m_bp) }
+            { label: '1周基点', val: hy?.change_1w_bp, display: formatChangeBp(hy?.change_1w_bp) },
+            { label: '1月基点', val: hy?.change_1m_bp, display: formatChangeBp(hy?.change_1m_bp) }
           ],
           frequency: 'Daily',
           updated: hy?.updated,
@@ -992,14 +1168,14 @@
         fedTargetHTML = `
           <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono">
             <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span>Short-End T-Bill Curve:</span>
-              <span class="text-[9px] text-slate-500">Bill Liquidity</span>
+              <span>短端国库券利率曲线 (T-Bill):</span>
+              <span class="text-[9px] text-slate-500">短端流动性</span>
             </div>
             <div class="grid grid-cols-4 gap-1 text-center bg-slate-950 p-1.5 rounded border border-slate-800">
-              <div><span class="text-slate-500 block text-[9px]">1M</span><span class="text-cyan-400 font-bold">${ratePath.m1 ?? '--'}%</span></div>
-              <div><span class="text-slate-500 block text-[9px]">3M</span><span class="text-cyan-400 font-bold">${ratePath.m3 ?? '--'}%</span></div>
-              <div><span class="text-slate-500 block text-[9px]">6M</span><span class="text-cyan-400 font-bold">${ratePath.m6 ?? '--'}%</span></div>
-              <div><span class="text-slate-500 block text-[9px]">1Y</span><span class="text-cyan-400 font-bold">${ratePath.m12 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">1月</span><span class="text-cyan-400 font-bold">${ratePath.m1 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">3月</span><span class="text-cyan-400 font-bold">${ratePath.m3 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">6月</span><span class="text-cyan-400 font-bold">${ratePath.m6 ?? '--'}%</span></div>
+              <div><span class="text-slate-500 block text-[9px]">1年</span><span class="text-cyan-400 font-bold">${ratePath.m12 ?? '--'}%</span></div>
             </div>
           </div>
         `;
@@ -1008,14 +1184,14 @@
       const ratesCards = [
         {
           chartId: 'u10y',
-          title: 'US 10Y Yield',
+          title: '美国 10 年期国债收益率',
           value: u10y?.current != null ? `${u10y.current}%` : '--',
           change_1d_text: formatChangeBp(u10y?.change_1d_bp),
           isPositive: (u10y?.change_1d_bp ?? 0) <= 0,
           percentile_1y: u10y?.percentile_1y,
           horizonItems: [
-            { label: '7D bp', val: u10y?.change_7d_bp, display: formatChangeBp(u10y?.change_7d_bp) },
-            { label: '30D bp', val: u10y?.change_30d_bp, display: formatChangeBp(u10y?.change_30d_bp) }
+            { label: '7日基点', val: u10y?.change_7d_bp, display: formatChangeBp(u10y?.change_7d_bp) },
+            { label: '30日基点', val: u10y?.change_30d_bp, display: formatChangeBp(u10y?.change_30d_bp) }
           ],
           frequency: 'Daily',
           updated: u10y?.updated,
@@ -1026,14 +1202,14 @@
         },
         {
           chartId: 'u2y',
-          title: 'US 2Y Yield',
+          title: '美国 2 年期国债收益率',
           value: u2y?.current != null ? `${u2y.current}%` : '--',
           change_1d_text: formatChangeBp(u2y?.change_1d_bp),
           isPositive: (u2y?.change_1d_bp ?? 0) <= 0,
           percentile_1y: u2y?.percentile_1y,
           horizonItems: [
-            { label: '7D bp', val: u2y?.change_7d_bp, display: formatChangeBp(u2y?.change_7d_bp) },
-            { label: '30D bp', val: u2y?.change_30d_bp, display: formatChangeBp(u2y?.change_30d_bp) }
+            { label: '7日基点', val: u2y?.change_7d_bp, display: formatChangeBp(u2y?.change_7d_bp) },
+            { label: '30日基点', val: u2y?.change_30d_bp, display: formatChangeBp(u2y?.change_30d_bp) }
           ],
           frequency: 'Daily',
           updated: u2y?.updated,
@@ -1044,15 +1220,15 @@
         },
         {
           chartId: 'real10y',
-          title: '10Y Real Yield (TIPS)',
-          badge: 'Macro Key',
+          title: '10 年期实际利率 (TIPS)',
+          badge: '核心宏观锚',
           value: real10y?.current != null ? `${real10y.current}%` : '--',
           change_1d_text: formatChangeBp(real10y?.change_1d_bp),
           isPositive: (real10y?.change_1d_bp ?? 0) <= 0,
           percentile_1y: real10y?.percentile_1y,
           horizonItems: [
-            { label: '7D bp', val: real10y?.change_7d_bp, display: formatChangeBp(real10y?.change_7d_bp) },
-            { label: '30D bp', val: real10y?.change_30d_bp, display: formatChangeBp(real10y?.change_30d_bp) }
+            { label: '7日基点', val: real10y?.change_7d_bp, display: formatChangeBp(real10y?.change_7d_bp) },
+            { label: '30日基点', val: real10y?.change_30d_bp, display: formatChangeBp(real10y?.change_30d_bp) }
           ],
           frequency: 'Daily',
           updated: real10y?.updated,
@@ -1063,14 +1239,14 @@
         },
         {
           chartId: 'spread102',
-          title: '10Y - 2Y Spread',
+          title: '10Y - 2Y 期限利差 (曲线倒挂)',
           value: spread102?.current_bp != null ? `${spread102.current_bp > 0 ? '+' : ''}${spread102.current_bp} bp` : '--',
           change_1d_text: spread102?.change_1d_bp != null ? formatChangeBp(spread102.change_1d_bp) : '--',
           isPositive: (spread102?.current_bp ?? 0) >= 0,
           horizonItems: [
-            { label: 'Curve', val: spread102?.current_bp, display: (spread102?.current_bp ?? 0) >= 0 ? 'Normal' : 'Inverted', color: (spread102?.current_bp ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400' },
-            { label: '7D bp', val: spread102?.change_7d_bp, display: formatChangeBp(spread102?.change_7d_bp) },
-            { label: '30D bp', val: spread102?.change_30d_bp, display: formatChangeBp(spread102?.change_30d_bp) }
+            { label: '形态', val: spread102?.current_bp, display: (spread102?.current_bp ?? 0) >= 0 ? '正常' : '倒挂', color: (spread102?.current_bp ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400' },
+            { label: '7日基点', val: spread102?.change_7d_bp, display: formatChangeBp(spread102?.change_7d_bp) },
+            { label: '30日基点', val: spread102?.change_30d_bp, display: formatChangeBp(spread102?.change_30d_bp) }
           ],
           frequency: 'Daily',
           updated: spread102?.updated,
@@ -1081,15 +1257,15 @@
         },
         {
           chartId: 'fedfunds',
-          title: 'Fed Target Range & EFFR',
-          badge: 'FOMC Policy',
+          title: '美联储目标利率区间与有效利率 (EFFR)',
+          badge: '货币政策',
           value: fedFunds?.target_range || (fedFunds?.current ? `${fedFunds.current}%` : '--'),
           change_1d_text: `EFFR: ${fedFunds?.effective_rate != null ? fedFunds.effective_rate + '%' : '--'}`,
           isPositive: true,
           customHTML: fedTargetHTML,
           horizonItems: [
-            { label: 'Effective (DFF)', val: fedFunds?.effective_rate, display: `${fedFunds?.effective_rate}%` },
-            { label: 'Target Adj', val: fedFunds?.target_change_bp, display: `${fedFunds?.target_change_bp >= 0 ? '+' : ''}${fedFunds?.target_change_bp} bp` }
+            { label: '有效利率(DFF)', val: fedFunds?.effective_rate, display: `${fedFunds?.effective_rate}%` },
+            { label: '目标调整', val: fedFunds?.target_change_bp, display: `${fedFunds?.target_change_bp >= 0 ? '+' : ''}${fedFunds?.target_change_bp} bp` }
           ],
           frequency: 'Daily (FOMC)',
           updated: fedFunds?.target_updated || fedFunds?.updated,
@@ -1121,14 +1297,14 @@
       const liqCards = [
         {
           chartId: 'fedbs',
-          title: 'Fed Balance Sheet',
+          title: '美联储总资产规模 (WALCL)',
           value: fedBs?.current_tril != null ? `$${fedBs.current_tril}T` : '--',
-          change_1d_text: fedBs?.change_1m != null ? `1M: ${formatChangePct(fedBs.change_1m)}` : '--',
+          change_1d_text: fedBs?.change_1m != null ? `1月: ${formatChangePct(fedBs.change_1m)}` : '--',
           isPositive: (fedBs?.change_1m ?? 0) >= 0,
           horizonItems: [
-            { label: '3M', val: fedBs?.change_3m, display: formatChangePct(fedBs?.change_3m) },
-            { label: '6M', val: fedBs?.change_6m, display: formatChangePct(fedBs?.change_6m) },
-            { label: 'YoY', val: fedBs?.change_yoy, display: formatChangePct(fedBs?.change_yoy) }
+            { label: '3月变化', val: fedBs?.change_3m, display: formatChangePct(fedBs?.change_3m) },
+            { label: '6月变化', val: fedBs?.change_6m, display: formatChangePct(fedBs?.change_6m) },
+            { label: '同比变化', val: fedBs?.change_yoy, display: formatChangePct(fedBs?.change_yoy) }
           ],
           frequency: 'Weekly (H.4.1)',
           updated: fedBs?.updated,
@@ -1139,13 +1315,13 @@
         },
         {
           chartId: 'tga',
-          title: 'US Treasury TGA',
+          title: '美国财政部一般账户 (TGA)',
           value: tga?.current_bil != null ? `$${tga.current_bil}B` : '--',
-          change_1d_text: tga?.change_7d != null ? `7D: ${formatChangePct(tga.change_7d)}` : '--',
+          change_1d_text: tga?.change_7d != null ? `7日: ${formatChangePct(tga.change_7d)}` : '--',
           isPositive: (tga?.change_7d ?? 0) <= 0,
           horizonItems: [
-            { label: '7D', val: tga?.change_7d, display: formatChangePct(tga?.change_7d) },
-            { label: '30D', val: tga?.change_30d, display: formatChangePct(tga?.change_30d) }
+            { label: '7日变化', val: tga?.change_7d, display: formatChangePct(tga?.change_7d) },
+            { label: '30日变化', val: tga?.change_30d, display: formatChangePct(tga?.change_30d) }
           ],
           frequency: 'Weekly',
           updated: tga?.updated,
@@ -1156,13 +1332,13 @@
         },
         {
           chartId: 'rrp',
-          title: 'Fed Reverse Repo (RRP)',
+          title: '美联储隔夜逆回购 (ON RRP)',
           value: rrp?.current_bil != null ? `$${rrp.current_bil}B` : '--',
-          change_1d_text: rrp?.change_7d != null ? `7D: ${formatChangePct(rrp.change_7d)}` : '--',
+          change_1d_text: rrp?.change_7d != null ? `7日: ${formatChangePct(rrp.change_7d)}` : '--',
           isPositive: (rrp?.change_7d ?? 0) <= 0,
           horizonItems: [
-            { label: '7D', val: rrp?.change_7d, display: formatChangePct(rrp?.change_7d) },
-            { label: '30D', val: rrp?.change_30d, display: formatChangePct(rrp?.change_30d) }
+            { label: '7日变化', val: rrp?.change_7d, display: formatChangePct(rrp?.change_7d) },
+            { label: '30日变化', val: rrp?.change_30d, display: formatChangePct(rrp?.change_30d) }
           ],
           frequency: 'Daily',
           updated: rrp?.updated,
@@ -1173,13 +1349,13 @@
         },
         {
           chartId: 'reserves',
-          title: 'Bank Reserves',
+          title: '商业银行准备金余额',
           value: reserves?.current_bil != null ? `$${reserves.current_bil}B` : '--',
-          change_1d_text: reserves?.change_30d != null ? `30D: ${formatChangePct(reserves.change_30d)}` : '--',
+          change_1d_text: reserves?.change_30d != null ? `30日: ${formatChangePct(reserves.change_30d)}` : '--',
           isPositive: (reserves?.change_30d ?? 0) >= 0,
           horizonItems: [
-            { label: '30D', val: reserves?.change_30d, display: formatChangePct(reserves?.change_30d) },
-            { label: 'Nature', val: 'Fed Liability', display: 'Reserve Balances', color: 'text-slate-400' }
+            { label: '30日变化', val: reserves?.change_30d, display: formatChangePct(reserves?.change_30d) },
+            { label: '负债性质', val: 'Fed Liability', display: '银行储备存款', color: 'text-slate-400' }
           ],
           frequency: 'Weekly (H.4.1)',
           updated: reserves?.updated,
@@ -1190,18 +1366,18 @@
         },
         {
           chartId: 'liqproxy',
-          title: 'US Net Liquidity Proxy',
-          badge: 'Derived',
+          title: '美元净流动性总指标 (代理估算)',
+          badge: '衍生指标',
           value: liqProxy?.current_tril != null ? `$${liqProxy.current_tril}T` : '--',
-          change_1d_text: liqProxy?.change_30d != null ? `30D: ${formatChangePct(liqProxy.change_30d)}` : '--',
+          change_1d_text: liqProxy?.change_30d != null ? `30日: ${formatChangePct(liqProxy.change_30d)}` : '--',
           isPositive: (liqProxy?.change_30d ?? 0) >= 0,
           horizonItems: [
-            { label: '7D', val: liqProxy?.change_7d, display: formatChangePct(liqProxy?.change_7d) },
-            { label: '30D', val: liqProxy?.change_30d, display: formatChangePct(liqProxy?.change_30d) }
+            { label: '7日变化', val: liqProxy?.change_7d, display: formatChangePct(liqProxy?.change_7d) },
+            { label: '30日变化', val: liqProxy?.change_30d, display: formatChangePct(liqProxy?.change_30d) }
           ],
           frequency: 'Weekly (Wed)',
           updated: liqProxy?.updated,
-          source: 'Derived (Fed BS - TGA - RRP)',
+          source: '测算公式: (美联储资产 - TGA - RRP)',
           status: liqProxy?.status,
           history: liqProxy?.history,
           color: '#38bdf8'
@@ -1244,15 +1420,15 @@
       const flowCards = [
         {
           chartId: 'stablecoins',
-          title: 'Stablecoin Market Cap',
+          title: '稳定币总流通市值',
           value: stable?.total_mcap_bil != null ? `$${stable.total_mcap_bil}B` : '--',
-          change_1d_text: stable?.change_30d != null ? `30D: ${formatChangePct(stable.change_30d)}` : '--',
+          change_1d_text: stable?.change_30d != null ? `30日: ${formatChangePct(stable.change_30d)}` : '--',
           isPositive: (stable?.change_30d ?? 0) >= 0,
           customHTML: stableBreakdownHTML,
           horizonItems: [
-            { label: '7D', val: stable?.change_7d, display: formatChangePct(stable?.change_7d) },
-            { label: '90D', val: stable?.change_90d, display: formatChangePct(stable?.change_90d) },
-            { label: '30D Issuance', val: stable?.net_issuance_30d_bil, display: `${stable?.net_issuance_30d_bil >= 0 ? '+' : ''}$${stable?.net_issuance_30d_bil}B` }
+            { label: '7日', val: stable?.change_7d, display: formatChangePct(stable?.change_7d) },
+            { label: '90日', val: stable?.change_90d, display: formatChangePct(stable?.change_90d) },
+            { label: '30日净增发', val: stable?.net_issuance_30d_bil, display: `${stable?.net_issuance_30d_bil >= 0 ? '+' : ''}$${stable?.net_issuance_30d_bil}B` }
           ],
           frequency: 'Daily',
           updated: stable?.updated,
@@ -1263,13 +1439,13 @@
         },
         {
           chartId: 'funding',
-          title: 'Binance BTC Funding Rate',
+          title: '币安 BTC 永续合约资金费率',
           value: funding?.rate_8h != null ? `${funding.rate_8h >= 0 ? '+' : ''}${funding.rate_8h}%` : '--',
-          change_1d_text: funding?.annualized_pct != null ? `${funding.annualized_pct}% Ann.` : '--',
+          change_1d_text: funding?.annualized_pct != null ? `${funding.annualized_pct}% 年化` : '--',
           isPositive: (funding?.annualized_pct ?? 0) <= 15,
           horizonItems: [
-            { label: 'Annualized', val: funding?.annualized_pct, display: `${funding?.annualized_pct}%` },
-            { label: 'Leverage', val: funding?.heat, display: funding?.heat, color: funding?.heat === 'Elevated' ? 'text-rose-400' : 'text-cyan-400' }
+            { label: '年化费率', val: funding?.annualized_pct, display: `${funding?.annualized_pct}%` },
+            { label: '杠杆情绪', val: funding?.heat, display: translateHeat(funding?.heat), color: funding?.heat === 'Elevated' ? 'text-rose-400' : 'text-cyan-400' }
           ],
           frequency: funding?.frequency || '8 Hours',
           updated: funding?.updated,
@@ -1280,13 +1456,13 @@
         },
         {
           chartId: 'oi',
-          title: 'Binance BTC Open Interest',
+          title: '币安 BTC 未平仓合约量 (OI)',
           value: oi?.total_usd_bil != null ? `$${oi.total_usd_bil}B` : '--',
           change_1d: oi?.change_24h,
           horizonItems: [
-            { label: '24H', val: oi?.change_24h, display: formatChangePct(oi?.change_24h) },
-            { label: '7D', val: oi?.change_7d, display: formatChangePct(oi?.change_7d) },
-            { label: 'BTC', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' }
+            { label: '24小时', val: oi?.change_24h, display: formatChangePct(oi?.change_24h) },
+            { label: '7日', val: oi?.change_7d, display: formatChangePct(oi?.change_7d) },
+            { label: '持仓折合', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' }
           ],
           frequency: 'Daily',
           updated: oi?.updated,
@@ -1297,10 +1473,10 @@
         },
         {
           chartId: 'netflow',
-          title: 'BTC Exchange Netflow',
+          title: '交易所 BTC 净充提流向',
           value: netflow?.value ?? '--',
           status: netflow?.status || 'unavailable',
-          reason: netflow?.reason || 'Requires CryptoQuant API Key',
+          reason: netflow?.reason || '需配置 CryptoQuant API 密钥',
           source: netflow?.source || 'CryptoQuant',
           history: []
         }
@@ -1324,13 +1500,13 @@
       const commCards = [
         {
           chartId: 'gold',
-          title: 'COMEX Gold (GC=F)',
+          title: 'COMEX 黄金期货 (GC=F)',
           value: gold?.current ? `$${Number(gold.current).toLocaleString('en-US')}` : '--',
           change_1d: gold?.change_1d,
           percentile_1y: gold?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: gold?.change_7d, display: formatChangePct(gold?.change_7d) },
-            { label: '30D', val: gold?.change_30d, display: formatChangePct(gold?.change_30d) }
+            { label: '7日', val: gold?.change_7d, display: formatChangePct(gold?.change_7d) },
+            { label: '30日', val: gold?.change_30d, display: formatChangePct(gold?.change_30d) }
           ],
           frequency: 'Daily',
           updated: gold?.updated,
@@ -1341,13 +1517,13 @@
         },
         {
           chartId: 'oil',
-          title: 'NYMEX WTI Crude (CL=F)',
+          title: 'NYMEX WTI 原油期货 (CL=F)',
           value: oil?.current ? `$${oil.current}` : '--',
           change_1d: oil?.change_1d,
           percentile_1y: oil?.percentile_1y,
           horizonItems: [
-            { label: '7D', val: oil?.change_7d, display: formatChangePct(oil?.change_7d) },
-            { label: '30D', val: oil?.change_30d, display: formatChangePct(oil?.change_30d) }
+            { label: '7日', val: oil?.change_7d, display: formatChangePct(oil?.change_7d) },
+            { label: '30日', val: oil?.change_30d, display: formatChangePct(oil?.change_30d) }
           ],
           frequency: 'Daily',
           updated: oil?.updated,
@@ -1372,7 +1548,7 @@
         renderDashboard();
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
-        document.getElementById('header-updated-time').innerText = 'Data Error · Check data.json';
+        document.getElementById('header-updated-time').innerText = '数据加载异常 · 请检查 data.json';
       }
     }
 

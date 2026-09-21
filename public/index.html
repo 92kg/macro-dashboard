@@ -116,6 +116,89 @@
       </div>
     </div>
 
+    <!-- TOP BOARD: MACRO RISK REGIME & 6-LAYER ARCHITECTURE -->
+    <section class="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-5 shadow-2xl space-y-5" id="macro-risk-regime-board">
+      <!-- Board Top Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="px-2.5 py-0.5 text-xs font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-lg">
+              MACRO RISK REGIME
+            </span>
+            <h2 class="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-2" id="regime-overall-title">
+              评估中...
+            </h2>
+            <span class="px-3 py-1 text-xs font-mono font-black rounded-lg uppercase tracking-wider" id="regime-risk-level-badge">
+              --
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            流动性 · 资金市场压力 · 利率/通胀 · 信用违约 · 跨资产压力 · 加密杠杆脆弱性 六层联动研判系统
+          </p>
+        </div>
+
+        <!-- Next Liquidity Risk Window & Modal Trigger -->
+        <div class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800/90 p-2.5 rounded-xl text-xs font-mono">
+          <div class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></div>
+          <div>
+            <div class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">NEXT LIQUIDITY RISK WINDOW</div>
+            <div class="text-slate-200 font-bold flex items-center gap-2 mt-0.5">
+              <span id="next-liq-event-name">正在加载关键窗口...</span>
+              <span class="px-1.5 py-0.2 rounded text-[11px] bg-amber-500/20 text-amber-300 font-bold" id="next-liq-event-days">--</span>
+            </div>
+            <div class="text-[10px] text-slate-400 truncate max-w-[280px]" id="next-liq-event-impact">--</div>
+          </div>
+          <button onclick="toggleCalendarModal(true)" class="ml-2 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 text-[11px] font-sans font-semibold transition border border-slate-700/80 shadow">
+            30天日历
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 Risk Layers Matrix -->
+      <div>
+        <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 mb-2 flex items-center justify-between">
+          <span>六层金融体系风险状态机 (REGIME LAYERS)</span>
+          <span class="text-slate-500">252日滚动分位与极端偏离检测</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" id="risk-layers-grid">
+          <!-- Dynamically rendered 6 layers -->
+        </div>
+      </div>
+
+      <!-- Risk Drivers & Transmission Chain Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2 border-t border-slate-800/70">
+        <!-- Quantitative Drivers (7 cols) -->
+        <div class="lg:col-span-7 bg-slate-950/60 rounded-xl p-3.5 border border-slate-800/70 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 mb-2.5">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
+                主要量化驱动因素 (Top Risk Drivers)
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">真实数据触发 · 严禁AI主观杜撰</span>
+            </div>
+            <div class="space-y-2 font-mono text-xs" id="regime-drivers-list">
+              <!-- Dynamically populated drivers -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Transmission Chain (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-950/60 rounded-xl p-3.5 border border-slate-800/70">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 mb-2.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+              风险传导链 (Transmission Chain)
+            </span>
+            <span class="text-[10px] font-mono text-slate-500">跨市场压力路径</span>
+          </div>
+          <div class="space-y-1.5 font-mono text-xs" id="transmission-chain-list">
+            <!-- Dynamically populated transmission stages -->
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- SECTION 0: MACRO REGIME & MARKET DIVERGENCE DIAGNOSIS BOARD -->
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
       
@@ -206,23 +289,28 @@
     <section class="space-y-3" id="sec-trad">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. 传统风险资产与信用市场</h2>
-          <span class="text-xs text-slate-500">标普 500、纳斯达克 100、VIX 恐慌指数与美银高收益信用利差 (OAS)</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">2. 传统风险资产、汇率与信用市场</h2>
+          <span class="text-xs text-slate-500">标普 500、纳斯达克 100、VIX 恐慌指数、MOVE 债市波动率、USD/JPY 汇率与 HY OAS 信用利差</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">股票与信用风险溢价</span>
+        <span class="text-xs font-mono text-slate-500">股票 · 债市波动 · 汇率 · 信用溢价</span>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="trad-cards"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="trad-cards"></div>
     </section>
 
     <!-- SECTION 3: RATES & YIELD CURVE (利率与收益率曲线) -->
     <section class="space-y-3" id="sec-rates">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. 美债利率与收益率曲线</h2>
-          <span class="text-xs text-slate-500">名义 10Y/2Y、10Y TIPS 实际利率、10Y-2Y 期限利差与美联储目标利率</span>
+          <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-200">3. 美债利率、资金市场压力与收益率曲线</h2>
+          <span class="text-xs text-slate-500">SOFR/IORB 资金市场压力、10Y 通胀预期拆解、名义 10Y/2Y、10Y TIPS 实际利率与 10Y-2Y 期限利差</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">主权债券基准</span>
+        <span class="text-xs font-mono text-slate-500">资金市场与主权债券基准</span>
       </div>
+
+      <!-- Spotlight Cards: Funding Stress & 10Y Breakeven Decomposition (2 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="rates-spotlight-cards"></div>
+
+      <!-- Basic Benchmark Rates Cards (5 cols) -->
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="rates-cards"></div>
     </section>
 
@@ -303,6 +391,32 @@
       <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
         <span>真实数据完整性标准</span>
         <button onclick="toggleDataQualityModal(false)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liquidity Calendar Modal -->
+  <div id="calendar-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <h3 class="text-base font-bold text-white tracking-wide">未来 35 天宏观流动性事件日历</h3>
+          <span class="px-2 py-0.5 text-xs font-mono rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Next 35 Days</span>
+        </div>
+        <button onclick="toggleCalendarModal(false)" class="text-slate-400 hover:text-white text-lg font-mono">✕</button>
+      </div>
+
+      <div class="text-xs text-slate-400">
+        监控未来关键议息决议 (FOMC)、通胀 (CPI)、非农就业 (NFP)、财政部发债缴款结算与季末银行监管约束窗口，识别流动性抽水与资金面摩擦敏感期。
+      </div>
+
+      <div class="overflow-y-auto custom-scrollbar flex-1 pr-1" id="modal-calendar-list">
+        <!-- Dynamically rendered list of upcoming liquidity events -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
+        <span>严禁主观涨跌预测 · 仅客观揭示资金敏感期</span>
+        <button onclick="toggleCalendarModal(false)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">关闭</button>
       </div>
     </div>
   </div>
@@ -434,6 +548,223 @@
       }
     }
 
+    function toggleCalendarModal(show) {
+      const modal = document.getElementById('calendar-modal');
+      if (modal) {
+        if (show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
+      }
+    }
+
+    const OVERALL_REGIME_MAP = {
+      'NORMAL': { label: 'NORMAL · 宏观流动性与风险溢价平稳', tone: 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40' },
+      'LIQUIDITY_TIGHTENING': { label: 'LIQUIDITY TIGHTENING · 央行流动性抽水与金融条件收紧', tone: 'bg-amber-950/60 text-amber-400 border-amber-800/40' },
+      'MARKET_FRAGILITY': { label: 'MARKET FRAGILITY · 局部资金摩擦与结构脆弱', tone: 'bg-amber-950/60 text-amber-300 border-amber-800/40' },
+      'CROSS_ASSET_STRESS': { label: 'CROSS-ASSET STRESS · 跨资产风险溢价传导承压', tone: 'bg-rose-950/60 text-rose-400 border-rose-800/40' },
+      'FORCED_DELEVERAGING': { label: 'FORCED DELEVERAGING · 强制去杠杆 / 跨资产踩踏', tone: 'bg-rose-950/80 text-rose-300 border-rose-700' },
+      'CRISIS_CANDIDATE': { label: 'CRISIS CANDIDATE · 系统性危机候选状态', tone: 'bg-rose-950 text-rose-200 border-rose-500 animate-pulse' }
+    };
+
+    const RISK_LEVEL_MAP = {
+      'NORMAL': { label: 'NORMAL 正常平稳', tone: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' },
+      'WATCH': { label: 'WATCH 重点观察', tone: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' },
+      'STRESS': { label: 'STRESS 市场承压', tone: 'bg-amber-500/20 text-amber-300 border border-amber-500/40' },
+      'HIGH STRESS': { label: 'HIGH STRESS 深度承压', tone: 'bg-rose-500/20 text-rose-300 border border-rose-500/40' },
+      'CRISIS CANDIDATE': { label: 'CRISIS CANDIDATE 危机候选', tone: 'bg-rose-600 text-white font-bold animate-pulse' }
+    };
+
+    const LAYER_STATUS_MAP = {
+      'NORMAL': { label: 'NORMAL 正常', tone: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
+      'WATCH': { label: 'WATCH 观察', tone: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10' },
+      'STRESS': { label: 'STRESS 承压', tone: 'border-amber-500/30 text-amber-400 bg-amber-500/10' },
+      'HIGH_STRESS': { label: 'HIGH STRESS 高压', tone: 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
+      'FRAGILE': { label: 'FRAGILE 脆弱', tone: 'border-rose-500/30 text-rose-400 bg-rose-500/10' },
+      'INSUFFICIENT_HISTORY': { label: '数据不足', tone: 'border-slate-700 text-slate-400 bg-slate-800/40' }
+    };
+
+    function renderRiskEngineSection(re, cal, d) {
+      if (!re) return;
+      
+      // Top Headline
+      const overallCfg = OVERALL_REGIME_MAP[re.overall_regime] || { label: re.regime_title || re.overall_regime, tone: 'text-slate-200' };
+      const overallEl = document.getElementById('regime-overall-title');
+      if (overallEl) {
+        overallEl.innerText = re.regime_title ? `${re.regime_title} (${re.overall_regime})` : overallCfg.label;
+      }
+      
+      // Risk level badge
+      const riskCfg = RISK_LEVEL_MAP[re.risk_level] || { label: re.risk_level, tone: 'bg-slate-800 text-slate-300 border border-slate-700' };
+      const riskBadgeEl = document.getElementById('regime-risk-level-badge');
+      if (riskBadgeEl) {
+        riskBadgeEl.className = `px-3 py-1 text-xs font-mono font-black rounded-lg uppercase tracking-wider ${riskCfg.tone}`;
+        riskBadgeEl.innerText = riskCfg.label;
+      }
+
+      // Next Liquidity Window
+      if (cal) {
+        const nextEv = cal.next_event;
+        if (nextEv) {
+          const nameEl = document.getElementById('next-liq-event-name');
+          const daysEl = document.getElementById('next-liq-event-days');
+          const impactEl = document.getElementById('next-liq-event-impact');
+          if (nameEl) nameEl.innerText = nextEv.event;
+          if (daysEl) daysEl.innerText = `${nextEv.date} (${nextEv.days_label})`;
+          if (impactEl) impactEl.innerText = `潜在敏感: ${nextEv.potential_impact}`;
+        }
+        
+        // Populate Calendar Modal
+        const calList = document.getElementById('modal-calendar-list');
+        if (calList && cal.upcoming_events) {
+          calList.innerHTML = `
+            <table class="w-full text-[11px] font-mono text-left">
+              <thead>
+                <tr class="text-slate-500 border-b border-slate-800 pb-1.5">
+                  <th class="py-1.5">窗口日期</th>
+                  <th class="py-1.5">事件名称</th>
+                  <th class="py-1.5">倒计时</th>
+                  <th class="py-1.5 text-right">潜在敏感资产 / 资金市场</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/40">
+                ${cal.upcoming_events.map(ev => `
+                  <tr class="hover:bg-slate-800/20">
+                    <td class="py-2 text-slate-300">${ev.date}</td>
+                    <td class="py-2 text-white font-semibold">${ev.event}</td>
+                    <td class="py-2">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] ${ev.days_remaining <= 5 ? 'bg-amber-950 text-amber-300 border border-amber-800/50 font-bold' : 'bg-slate-800 text-slate-400'}">
+                        ${ev.days_label}
+                      </span>
+                    </td>
+                    <td class="py-2 text-slate-400 text-right truncate max-w-[220px]">${ev.potential_impact}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      }
+
+      // 6 Risk Layers Matrix
+      const layersGrid = document.getElementById('risk-layers-grid');
+      if (layersGrid) {
+        const layers = [
+          {
+            num: '1',
+            title: 'USD Liquidity',
+            subTitle: '美元净流动性',
+            status: re.liquidity?.status || 'NORMAL',
+            metric: d?.us_liquidity?.us_liquidity_proxy?.current_tril ? `$${d.us_liquidity.us_liquidity_proxy.current_tril}T` : '--',
+            metricLabel: '净流动性代理',
+            detail: d?.us_liquidity?.us_liquidity_proxy?.change_30d != null ? `30日: ${d.us_liquidity.us_liquidity_proxy.change_30d >= 0 ? '+' : ''}${d.us_liquidity.us_liquidity_proxy.change_30d}%` : '央行总资产体系',
+            target: 'liqproxy'
+          },
+          {
+            num: '2',
+            title: 'Funding Stress',
+            subTitle: '资金市场压力',
+            status: re.funding?.status || 'NORMAL',
+            metric: re.funding?.sofr_iorb_spread_bp != null ? `${re.funding.sofr_iorb_spread_bp > 0 ? '+' : ''}${re.funding.sofr_iorb_spread_bp} bp` : '--',
+            metricLabel: 'SOFR-IORB 利差',
+            detail: re.funding?.sofr_change_1d_bp != null ? `SOFR跳升: ${re.funding.sofr_change_1d_bp > 0 ? '+' : ''}${re.funding.sofr_change_1d_bp}bp` : `分位: ${re.funding?.percentile ?? '--'}%`,
+            target: 'funding-spotlight'
+          },
+          {
+            num: '3',
+            title: 'Rates & Inflation',
+            subTitle: '利率与通胀预期',
+            status: re.rates?.status || 'WATCH',
+            metric: re.rates?.breakeven_10y != null ? `${re.rates.breakeven_10y}%` : '--',
+            metricLabel: '10Y 通胀预期',
+            detail: re.rates?.regime_cn || `名义 10Y: ${re.rates?.nominal_10y}%`,
+            target: 'breakeven-spotlight'
+          },
+          {
+            num: '4',
+            title: 'Credit Stress',
+            subTitle: '企业信用违约',
+            status: re.credit?.status || 'NORMAL',
+            metric: re.credit?.hy_oas != null ? `${re.credit.hy_oas}%` : '--',
+            metricLabel: 'HY OAS 信用利差',
+            detail: re.credit?.percentile != null ? `1年分位: ${re.credit.percentile}%` : (re.credit?.change_5d_bp != null ? `5日: ${formatChangeBp(re.credit.change_5d_bp)}` : '--'),
+            target: 'hy-spread'
+          },
+          {
+            num: '5',
+            title: 'Cross-Asset',
+            subTitle: '跨资产踩踏/压力',
+            status: re.cross_asset?.status || 'WATCH',
+            metric: re.cross_asset?.move?.current != null ? `${re.cross_asset.move.current}` : '--',
+            metricLabel: 'MOVE 债市波动',
+            detail: `VIX: ${re.cross_asset?.vix?.current ?? '--'} · 踩踏信号: ${re.cross_asset?.liquidation_signals ?? 0}/7`,
+            target: 'move'
+          },
+          {
+            num: '6',
+            title: 'Crypto Structural',
+            subTitle: '加密杠杆脆弱性',
+            status: re.crypto?.status || 'NORMAL',
+            metric: re.crypto?.cme_basis?.annualized_basis_pct != null ? `${re.crypto.cme_basis.annualized_basis_pct}%` : '--',
+            metricLabel: 'CME 期货年化基差',
+            detail: re.crypto?.oi_spot_ratio != null ? `OI/现货量: ${re.crypto.oi_spot_ratio}x` : '杠杆与现货资金',
+            target: 'cme-basis'
+          }
+        ];
+
+        layersGrid.innerHTML = layers.map(layer => {
+          const stCfg = LAYER_STATUS_MAP[layer.status] || { label: layer.status, tone: 'border-slate-700 text-slate-300 bg-slate-800/40' };
+          return `
+            <div onclick="scrollToCard('${layer.target}')" class="p-3 rounded-xl border ${stCfg.tone} flex flex-col justify-between cursor-pointer hover:brightness-125 transition">
+              <div>
+                <div class="flex items-center justify-between gap-1 mb-1">
+                  <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">${layer.num}. ${layer.title}</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${stCfg.tone}">${stCfg.label}</span>
+                </div>
+                <div class="text-[11px] font-medium text-slate-300 truncate">${layer.subTitle}</div>
+                <div class="text-base font-bold font-mono text-white mt-1.5">${layer.metric}</div>
+                <div class="text-[10px] font-mono text-slate-400">${layer.metricLabel}</div>
+              </div>
+              <div class="text-[10px] font-mono text-slate-400/90 pt-1.5 mt-1.5 border-t border-slate-700/40 truncate">
+                ${layer.detail}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Top Drivers List
+      const driversContainer = document.getElementById('regime-drivers-list');
+      if (driversContainer && re.drivers) {
+        driversContainer.innerHTML = re.drivers.map((drv, idx) => `
+          <div class="flex items-start gap-2 text-slate-200">
+            <span class="px-1.5 py-0.2 rounded text-[10px] bg-cyan-950/80 text-cyan-400 border border-cyan-800/50 font-bold shrink-0">0${idx + 1}</span>
+            <span class="leading-relaxed text-[11px]">${drv}</span>
+          </div>
+        `).join('');
+      }
+
+      // Transmission Chain List
+      const chainContainer = document.getElementById('transmission-chain-list');
+      if (chainContainer && re.transmission_chain) {
+        chainContainer.innerHTML = re.transmission_chain.map((stage, idx) => {
+          const stCfg = LAYER_STATUS_MAP[stage.status] || { label: stage.status, tone: 'bg-slate-800 text-slate-400 border-slate-700' };
+          const isLast = idx === re.transmission_chain.length - 1;
+          return `
+            <div class="flex items-center justify-between gap-2 p-1.5 rounded bg-slate-900/80 border border-slate-800">
+              <div class="flex items-center gap-2 truncate">
+                <span class="text-[10px] font-mono text-slate-500">${idx + 1}</span>
+                <span class="text-slate-300 font-medium text-[11px] truncate">${stage.stage}</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-[10px] text-slate-400 font-mono hidden sm:inline truncate max-w-[120px]">${stage.detail}</span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold ${stCfg.tone}">${stCfg.label}</span>
+              </div>
+            </div>
+            ${!isLast ? '<div class="text-center text-slate-600 text-[9px] -my-1 font-mono">↓</div>' : ''}
+          `;
+        }).join('');
+      }
+    }
+
     function setTimezone(tz) {
       selectedTimezone = tz;
       document.querySelectorAll('#tz-toggle .tz-btn').forEach(btn => {
@@ -510,34 +841,26 @@
       const btc = d.overview?.btc;
       const etf = d.overview?.btc_etf_flow;
       const dxy = d.overview?.dxy;
-      const real10y = d.rates?.us10y_real;
       const liq = d.us_liquidity?.us_liquidity_proxy;
-      const spx = d.traditional_risk?.spx;
       const hy = d.traditional_risk?.hy_spread;
-      const funding = d.crypto_leverage?.funding_rate;
-      const divCase = d.market_divergence?.[0]?.case_id || 'Neutral';
+      const move = d.traditional_risk?.move;
+      const re = d.risk_engine;
+      const sofrSpread = re?.funding?.sofr_iorb_spread_bp;
+      const breakeven = re?.rates?.breakeven_10y;
+      const cmeBasis = re?.crypto?.cme_basis;
       const dq = d.data_quality;
-
-      const divLabelMap = {
-        'Case A': '逆风吸收',
-        'Case B': '顺风共振',
-        'Case C': '杠杆虚火',
-        'Case D': '信用背离',
-        'Shift-Corr': '脱钩解耦',
-        'Neutral': '基准对齐'
-      };
 
       const items = [
         { q: '1. BTC现货', a: btc ? `$${Number(btc.current).toLocaleString()} (${formatChangePct(btc.change_1d)})` : '--', target: 'btc', tone: (btc?.change_1d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
         { q: '2. 现货ETF', a: etf ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M (7日 ${etf.flow_7d_bil >= 0 ? '+' : ''}${etf.flow_7d_bil}B)` : '--', target: 'etf-flow', tone: (etf?.flow_7d_bil ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
         { q: '3. 美元指数', a: dxy ? `${dxy.current} (${translateRegime(d.macro_regime?.usd)})` : '--', target: 'dxy', tone: d.macro_regime?.usd === 'Strong' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
-        { q: '4. 实际利率', a: real10y ? `${real10y.current}% (${translateRegime(d.macro_regime?.real_yield)})` : '--', target: 'real10y', tone: d.macro_regime?.real_yield === 'Rising' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
-        { q: '5. 美元净流动性', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '6. 美股风险偏好', a: translateRegime(d.macro_regime?.equities) || '避险防御', target: 'spx', tone: d.macro_regime?.equities === 'Risk-On' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
-        { q: '7. 信用利差压力', a: hy ? `${hy.current}% (${translateRegime(d.macro_regime?.credit)})` : '--', target: 'hy-spread', tone: d.macro_regime?.credit === 'Healthy' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
-        { q: '8. 加密合约杠杆', a: funding?.status === 'ok' ? `${translateHeat(funding.heat)} (${funding.annualized_pct}% 年化)` : (translateRegime(d.macro_regime?.crypto_leverage) || '未连接'), target: 'funding', tone: funding?.heat === 'Elevated' ? 'bg-rose-950/40 text-rose-300 border-rose-800/40' : (d.macro_regime?.crypto_leverage === 'Unavailable' ? 'bg-slate-800/60 text-slate-400 border-slate-700' : 'bg-slate-800 text-slate-300 border-slate-700') },
-        { q: '9. 跨市场背离', a: divLabelMap[divCase] || divCase, target: 'btc', tone: divCase !== 'Neutral' ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-slate-800 text-slate-400 border-slate-700' },
-        { q: '10. 数据完整度', a: dq ? dq.summary : '100%', target: 'modal', isModalTrigger: true, tone: dq?.health_state === 'Optimal' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' },
+        { q: '4. 资金回购', a: sofrSpread != null ? `SOFR-IORB ${sofrSpread > 0 ? '+' : ''}${sofrSpread}bp (${re?.funding?.status})` : '--', target: 'funding-spotlight', tone: re?.funding?.status === 'NORMAL' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
+        { q: '5. 债市恐慌', a: move ? `MOVE ${move.current} (${move.status === 'ok' ? (re?.cross_asset?.move?.status || 'NORMAL') : '未接入'})` : '--', target: 'move', tone: (re?.cross_asset?.move?.status === 'NORMAL' || !re?.cross_asset?.move) ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-amber-950/40 text-amber-300 border-amber-800/40' },
+        { q: '6. 10Y通胀预期', a: breakeven != null ? `${breakeven}% (${re?.rates?.regime_cn || '常态'})` : '--', target: 'breakeven-spotlight', tone: re?.rates?.status === 'WATCH' ? 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '7. 美元净流动性', a: liq ? `$${liq.current_tril}T (${liq.change_30d >= 0 ? '+' : ''}${liq.change_30d}%)` : '--', target: 'liqproxy', tone: (liq?.change_30d ?? 0) >= 0 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '8. 信用利差', a: hy ? `${hy.current}% (分位 ${re?.credit?.percentile ?? '--'}%)` : '--', target: 'hy-spread', tone: re?.credit?.status === 'NORMAL' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-rose-950/40 text-rose-300 border-rose-800/40' },
+        { q: '9. CME期货基差', a: cmeBasis ? `${cmeBasis.annualized_basis_pct}% 年化 (${cmeBasis.is_compressed ? '压缩预警' : '合理'})` : '--', target: 'cme-basis', tone: cmeBasis?.is_compressed ? 'bg-amber-950/40 text-amber-300 border-amber-800/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' },
+        { q: '10. 数据健康度', a: dq ? dq.summary : '100%', target: 'modal', isModalTrigger: true, tone: dq?.health_state === 'Operational' || dq?.health_state === 'Optimal' ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' : 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40' },
       ];
 
       strip.innerHTML = items.map(it => `
@@ -962,6 +1285,9 @@
       // 10-Second Executive Strip
       renderExecutiveStrip(d);
 
+      // Top Board: Macro Risk Regime & 6 Layers
+      renderRiskEngineSection(d.risk_engine, d.liquidity_calendar, d);
+
       // Data Quality Modal Population
       renderDataQualityModal(d.data_quality);
 
@@ -1067,13 +1393,17 @@
       });
       ovCards.forEach(c => renderSparkline(c.chartId, c.history, c.color, c.isBar));
 
-      // SECTION 2: TRADITIONAL RISK CARDS
+      // SECTION 2: TRADITIONAL RISK CARDS (6 Cards: SPX, NDX, VIX, MOVE, USDJPY, HY OAS)
       const tradContainer = document.getElementById('trad-cards');
       tradContainer.innerHTML = '';
       const spx = d.traditional_risk?.spx;
       const ndx = d.traditional_risk?.nasdaq;
       const vix = d.traditional_risk?.vix;
+      const move = d.traditional_risk?.move;
+      const usdjpy = d.traditional_risk?.usdjpy;
       const hy = d.traditional_risk?.hy_spread;
+      const reCredit = d.risk_engine?.credit;
+      const reCross = d.risk_engine?.cross_asset;
 
       const tradCards = [
         {
@@ -1129,15 +1459,55 @@
           color: '#f43f5e'
         },
         {
-          chartId: 'hy-spread',
-          title: '高收益信用利差 (OAS)',
-          value: hy?.current != null ? `${hy.current}%` : '--',
-          change_1d_text: hy?.change_1w_bp != null ? formatChangeBp(hy.change_1w_bp) : '--',
-          isPositive: (hy?.change_1w_bp ?? 0) <= 0,
-          percentile_1y: hy?.percentile_1y,
+          chartId: 'move',
+          title: 'MOVE 美债波动率指数',
+          badge: '国债波动压力',
+          value: move?.current ?? '--',
+          change_1d: move?.change_1d,
+          isPositive: (move?.change_1d ?? 0) <= 0,
+          percentile_1y: move?.percentile_1y,
           horizonItems: [
-            { label: '1周基点', val: hy?.change_1w_bp, display: formatChangeBp(hy?.change_1w_bp) },
-            { label: '1月基点', val: hy?.change_1m_bp, display: formatChangeBp(hy?.change_1m_bp) }
+            { label: '5日变化', val: move?.change_5d, display: formatChangePct(move?.change_5d) },
+            { label: '20日变化', val: move?.change_20d, display: formatChangePct(move?.change_20d) },
+            { label: '波动状态', val: 'status', display: reCross?.move?.status || 'NORMAL', color: (reCross?.move?.status === 'NORMAL' || !reCross?.move) ? 'text-emerald-400' : 'text-amber-400' }
+          ],
+          frequency: 'Daily',
+          updated: move?.updated,
+          source: 'ICE / Yahoo (^MOVE)',
+          status: move?.status,
+          history: move?.history,
+          color: '#fb7185'
+        },
+        {
+          chartId: 'usdjpy',
+          title: '美元 / 日元 (USD / JPY)',
+          badge: '套息平仓敏感度',
+          value: usdjpy?.current ?? '--',
+          change_1d: usdjpy?.change_1d,
+          percentile_1y: usdjpy?.percentile_1y,
+          horizonItems: [
+            { label: '7日变化', val: usdjpy?.change_7d, display: formatChangePct(usdjpy?.change_7d) },
+            { label: '30日变化', val: usdjpy?.change_30d, display: formatChangePct(usdjpy?.change_30d) },
+            { label: '套息研判', val: 'carry', display: (usdjpy?.change_7d ?? 0) < -2.0 ? '日元急升预警' : '平稳正常', color: (usdjpy?.change_7d ?? 0) < -2.0 ? 'text-rose-400' : 'text-cyan-400' }
+          ],
+          frequency: 'Daily',
+          updated: usdjpy?.updated,
+          source: 'Forex / Yahoo (JPY=X)',
+          status: usdjpy?.status,
+          history: usdjpy?.history,
+          color: '#38bdf8'
+        },
+        {
+          chartId: 'hy-spread',
+          title: '高收益信用利差 (HY OAS)',
+          value: hy?.current != null ? `${hy.current}%` : '--',
+          change_1d_text: reCredit?.change_5d_bp != null ? `5日: ${formatChangeBp(reCredit.change_5d_bp)}` : (hy?.change_1w_bp != null ? formatChangeBp(hy.change_1w_bp) : '--'),
+          isPositive: (reCredit?.change_5d_bp ?? (hy?.change_1w_bp ?? 0)) <= 0,
+          percentile_1y: reCredit?.percentile ?? hy?.percentile_1y,
+          horizonItems: [
+            { label: '1日基点', val: reCredit?.change_1d_bp, display: formatChangeBp(reCredit?.change_1d_bp) },
+            { label: '20日基点', val: reCredit?.change_20d_bp, display: formatChangeBp(reCredit?.change_20d_bp) },
+            { label: 'IG投资级', val: d.traditional_risk?.ig_spread?.current, display: d.traditional_risk?.ig_spread?.current != null ? `${d.traditional_risk.ig_spread.current}%` : '--' }
           ],
           frequency: 'Daily',
           updated: hy?.updated,
@@ -1153,7 +1523,82 @@
       });
       tradCards.forEach(c => renderSparkline(c.chartId, c.history, c.color));
 
-      // SECTION 3: RATES & YIELD CURVE CARDS
+      // SECTION 3: RATES SPOTLIGHT (Funding Stress & 10Y Breakeven)
+      const spotlightContainer = document.getElementById('rates-spotlight-cards');
+      if (spotlightContainer) {
+        spotlightContainer.innerHTML = '';
+        const reFunding = d.risk_engine?.funding;
+        const reRates = d.risk_engine?.rates;
+
+        const fundingCard = {
+          chartId: 'funding-spotlight',
+          title: '资金市场压力与回购利差 (Funding Stress)',
+          badge: reFunding?.status || 'NORMAL',
+          value: reFunding?.sofr_iorb_spread_bp != null ? `${reFunding.sofr_iorb_spread_bp > 0 ? '+' : ''}${reFunding.sofr_iorb_spread_bp} bp` : '--',
+          change_1d_text: reFunding?.sofr_change_1d_bp != null ? `SOFR单日: ${reFunding.sofr_change_1d_bp > 0 ? '+' : ''}${reFunding.sofr_change_1d_bp} bp` : '--',
+          isPositive: (reFunding?.sofr_change_1d_bp ?? 0) <= 5,
+          percentile_1y: reFunding?.percentile,
+          horizonItems: [
+            { label: 'SOFR隔夜', val: reFunding?.sofr, display: `${reFunding?.sofr ?? '--'}%` },
+            { label: 'IORB准备金', val: reFunding?.iorb, display: `${reFunding?.iorb ?? '--'}%` },
+            { label: 'EFFR有效', val: reFunding?.effr, display: `${reFunding?.effr ?? '--'}%` },
+            { label: 'SOFR-EFFR', val: reFunding?.sofr_effr_spread_bp, display: `${reFunding?.sofr_effr_spread_bp > 0 ? '+' : ''}${reFunding?.sofr_effr_spread_bp ?? '--'} bp` },
+            { label: '5日利差变化', val: reFunding?.spread_change_5d_bp, display: `${formatChangeBp(reFunding?.spread_change_5d_bp)}` },
+            { label: 'Z-Score', val: reFunding?.zscore, display: `${reFunding?.zscore ?? '--'}` }
+          ],
+          customHTML: `
+            <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span class="text-slate-500">压力诊断:</span>
+              <span class="text-slate-200">${reFunding?.drivers?.[0] || '回购资金市场运行平稳'}</span>
+            </div>
+          `,
+          frequency: 'Daily',
+          updated: d.rates?.sofr?.updated,
+          source: 'NY Fed / FRED (SOFR - IORB)',
+          status: reFunding?.status === 'NORMAL' ? 'ok' : 'stale',
+          history: reFunding?.history,
+          color: '#38bdf8'
+        };
+
+        const breakevenCard = {
+          chartId: 'breakeven-spotlight',
+          title: '10 年期通胀预期拆解与利率驱动范式',
+          badge: reRates?.regime_cn || '实际利率驱动',
+          value: reRates?.breakeven_10y != null ? `${reRates.breakeven_10y}%` : '--',
+          change_1d_text: `名义: ${reRates?.nominal_10y ?? '--'}% = 实际 ${reRates?.real_10y ?? '--'}% + 通胀`,
+          isPositive: true,
+          percentile_1y: d.rates?.us10y_breakeven?.percentile_1y,
+          horizonItems: [
+            { label: '名义5日变化', val: reRates?.nominal_change_5d_bp, display: formatChangeBp(reRates?.nominal_change_5d_bp) },
+            { label: '实际5日变化', val: reRates?.real_change_5d_bp, display: formatChangeBp(reRates?.real_change_5d_bp) },
+            { label: '通胀5日变化', val: reRates?.breakeven_change_5d_bp, display: formatChangeBp(reRates?.breakeven_change_5d_bp) },
+            { label: '名义20日', val: reRates?.nominal_change_20d_bp, display: formatChangeBp(reRates?.nominal_change_20d_bp) },
+            { label: '实际20日', val: reRates?.real_change_20d_bp, display: formatChangeBp(reRates?.real_change_20d_bp) },
+            { label: '通胀20日', val: reRates?.breakeven_change_20d_bp, display: formatChangeBp(reRates?.breakeven_change_20d_bp) }
+          ],
+          customHTML: `
+            <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span class="text-slate-500">宏观范式:</span>
+              <span class="text-cyan-400 font-semibold">${reRates?.regime_cn || '常态'}</span> · <span class="text-slate-300">${reRates?.drivers?.[0] || '10Y通胀预期保持平稳锚定'}</span>
+            </div>
+          `,
+          frequency: 'Daily',
+          updated: d.rates?.us10y_breakeven?.updated,
+          source: 'FRED (10Y Breakeven T10YIE)',
+          status: 'ok',
+          history: d.rates?.us10y_breakeven?.history,
+          color: '#a855f7'
+        };
+
+        [fundingCard, breakevenCard].forEach(c => {
+          spotlightContainer.innerHTML += createCardHTML(c);
+        });
+        [fundingCard, breakevenCard].forEach(c => {
+          if (c.history && c.history.length) renderSparkline(c.chartId, c.history, c.color);
+        });
+      }
+
+      // SECTION 3: RATES BENCHMARK CARDS (5 Cards)
       const ratesContainer = document.getElementById('rates-cards');
       ratesContainer.innerHTML = '';
       const u10y = d.rates?.us10y;
@@ -1389,13 +1834,13 @@
       });
       liqCards.forEach(c => renderSparkline(c.chartId, c.history, c.color));
 
-      // SECTION 5: CRYPTO CAPITAL FLOW & LEVERAGE CARDS
+      // SECTION 5: CRYPTO CAPITAL FLOW & LEVERAGE CARDS (4 Cards)
       const flowContainer = document.getElementById('crypto-flow-cards');
       flowContainer.innerHTML = '';
       const stable = d.crypto_capital_flow?.stablecoins;
-      const netflow = d.crypto_capital_flow?.btc_exchange_netflow;
       const funding = d.crypto_leverage?.funding_rate;
       const oi = d.crypto_leverage?.open_interest;
+      const cmeBasis = d.crypto_capital_flow?.cme_basis || d.risk_engine?.crypto?.cme_basis;
 
       // Stablecoin Composition Bar
       let stableBreakdownHTML = '';
@@ -1419,8 +1864,76 @@
 
       const flowCards = [
         {
+          chartId: 'etf-flow-crypto',
+          title: 'BTC 现货 ETF 净流向',
+          badge: '机构资金',
+          value: etf?.today_net_mil != null ? `${etf.today_net_mil >= 0 ? '+' : ''}$${etf.today_net_mil}M` : '--',
+          change_1d_text: `7日累计: ${etf?.flow_7d_bil != null ? (etf.flow_7d_bil >= 0 ? '+' : '') + etf.flow_7d_bil + 'B' : '--'}`,
+          isPositive: (etf?.flow_7d_bil ?? 0) >= 0,
+          horizonItems: [
+            { label: '7日净额', val: etf?.flow_7d_mil, display: `${etf?.flow_7d_bil >= 0 ? '+' : ''}${etf?.flow_7d_bil}B` },
+            { label: '30日净额', val: etf?.flow_30d_mil, display: `${etf?.flow_30d_bil >= 0 ? '+' : ''}${etf?.flow_30d_bil}B` },
+            { label: '贝莱德 IBIT', val: etf?.latest_breakdown?.ibit, display: `${etf?.latest_breakdown?.ibit >= 0 ? '+' : ''}${etf?.latest_breakdown?.ibit}M` }
+          ],
+          frequency: etf?.frequency || 'Daily (T+1)',
+          updated: etf?.updated,
+          source: etf?.source || 'Farside Investors',
+          status: etf?.status,
+          history: etf?.history_30d,
+          isBar: true
+        },
+        {
+          chartId: 'cme-basis',
+          title: 'CME 比特币期货年化基差',
+          badge: cmeBasis?.is_compressed ? '基差压缩预警' : '机构溢价合理',
+          value: cmeBasis?.annualized_basis_pct != null ? `${cmeBasis.annualized_basis_pct}%` : '--',
+          change_1d_text: `期现溢价: ${cmeBasis?.basis_usd != null ? (cmeBasis.basis_usd >= 0 ? '+' : '') + '$' + cmeBasis.basis_usd : '--'}`,
+          isPositive: !(cmeBasis?.is_compressed ?? false),
+          horizonItems: [
+            { label: '现货价格', val: cmeBasis?.spot_price, display: `$${cmeBasis?.spot_price ? Number(cmeBasis.spot_price).toLocaleString() : '--'}` },
+            { label: '期货合约', val: cmeBasis?.futures_price, display: `$${cmeBasis?.futures_price ? Number(cmeBasis.futures_price).toLocaleString() : '--'}` },
+            { label: '剩余交割', val: cmeBasis?.days_to_expiry, display: `${cmeBasis?.days_to_expiry ?? '--'} 天`, color: 'text-cyan-400' }
+          ],
+          customHTML: `
+            <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span class="text-slate-500">机构套利:</span>
+              <span class="${cmeBasis?.is_compressed ? 'text-amber-400' : 'text-emerald-400'} font-semibold">${cmeBasis?.is_compressed ? '基差收窄压缩 · 套利需求降温' : '基差健康 · 套利资本稳健'}</span>
+            </div>
+          `,
+          frequency: 'Daily',
+          updated: cmeBasis?.updated,
+          source: 'CME Futures (BTC=F) / Yahoo',
+          status: cmeBasis?.status,
+          history: [],
+          color: '#06b6d4'
+        },
+        {
+          chartId: 'oi',
+          title: '币安 BTC 永续杠杆与持仓比率',
+          value: oi?.total_usd_bil != null ? `$${oi.total_usd_bil}B` : '--',
+          change_1d: oi?.change_24h,
+          change_1d_text: d.crypto_leverage?.oi_spot_ratio != null ? `持仓/现货比: ${d.crypto_leverage.oi_spot_ratio}x` : undefined,
+          horizonItems: [
+            { label: '24h现货成交', val: d.crypto_leverage?.spot_volume_24h?.quote_volume_bil, display: `$${d.crypto_leverage?.spot_volume_24h?.quote_volume_bil ?? '--'}B` },
+            { label: '持仓折合', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' },
+            { label: '年化资金费', val: funding?.annualized_pct, display: `${funding?.annualized_pct ?? '--'}%`, color: funding?.heat === 'Elevated' ? 'text-rose-400' : 'text-cyan-400' }
+          ],
+          customHTML: `
+            <div class="mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span class="text-slate-500">杠杆状态:</span>
+              <span class="text-slate-300">${funding?.rate_8h != null ? `8h费率: ${funding.rate_8h > 0 ? '+' : ''}${funding.rate_8h}%` : ''} · 杠杆活动主导代理</span>
+            </div>
+          `,
+          frequency: 'Daily',
+          updated: oi?.updated,
+          source: 'Binance Futures (BTC)',
+          status: oi?.status,
+          history: oi?.history,
+          color: '#6366f1'
+        },
+        {
           chartId: 'stablecoins',
-          title: '稳定币总流通市值',
+          title: '全网稳定币总流通市值与结构',
           value: stable?.total_mcap_bil != null ? `$${stable.total_mcap_bil}B` : '--',
           change_1d_text: stable?.change_30d != null ? `30日: ${formatChangePct(stable.change_30d)}` : '--',
           isPositive: (stable?.change_30d ?? 0) >= 0,
@@ -1436,49 +1949,6 @@
           status: stable?.status,
           history: stable?.history,
           color: '#10b981'
-        },
-        {
-          chartId: 'funding',
-          title: '币安 BTC 永续合约资金费率',
-          value: funding?.rate_8h != null ? `${funding.rate_8h >= 0 ? '+' : ''}${funding.rate_8h}%` : '--',
-          change_1d_text: funding?.annualized_pct != null ? `${funding.annualized_pct}% 年化` : '--',
-          isPositive: (funding?.annualized_pct ?? 0) <= 15,
-          horizonItems: [
-            { label: '年化费率', val: funding?.annualized_pct, display: `${funding?.annualized_pct}%` },
-            { label: '杠杆情绪', val: funding?.heat, display: translateHeat(funding?.heat), color: funding?.heat === 'Elevated' ? 'text-rose-400' : 'text-cyan-400' }
-          ],
-          frequency: funding?.frequency || '8 Hours',
-          updated: funding?.updated,
-          source: funding?.source || 'Binance Futures (BTCUSDT)',
-          status: funding?.status,
-          history: [],
-          color: '#f59e0b'
-        },
-        {
-          chartId: 'oi',
-          title: '币安 BTC 未平仓合约量 (OI)',
-          value: oi?.total_usd_bil != null ? `$${oi.total_usd_bil}B` : '--',
-          change_1d: oi?.change_24h,
-          horizonItems: [
-            { label: '24小时', val: oi?.change_24h, display: formatChangePct(oi?.change_24h) },
-            { label: '7日', val: oi?.change_7d, display: formatChangePct(oi?.change_7d) },
-            { label: '持仓折合', val: oi?.total_btc, display: `${Number(oi?.total_btc).toLocaleString()} ₿`, color: 'text-amber-400' }
-          ],
-          frequency: 'Daily',
-          updated: oi?.updated,
-          source: oi?.source || 'Binance Futures (BTC)',
-          status: oi?.status,
-          history: oi?.history,
-          color: '#6366f1'
-        },
-        {
-          chartId: 'netflow',
-          title: '交易所 BTC 净充提流向',
-          value: netflow?.value ?? '--',
-          status: netflow?.status || 'unavailable',
-          reason: netflow?.reason || '需配置 CryptoQuant API 密钥',
-          source: netflow?.source || 'CryptoQuant',
-          history: []
         }
       ];
 
@@ -1487,7 +1957,7 @@
       });
       flowCards.forEach(c => {
         if (c.history && c.history.length) {
-          renderSparkline(c.chartId, c.history, c.color);
+          renderSparkline(c.chartId, c.history, c.color, c.isBar);
         }
       });
 

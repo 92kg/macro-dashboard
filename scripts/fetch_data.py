@@ -9,6 +9,23 @@ import requests
 import pandas as pd
 import yfinance as yf
 from bs4 import BeautifulSoup
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+try:
+    from scripts.risk_engine import (
+        evaluate_funding_stress, evaluate_move_volatility, evaluate_rates_and_breakeven,
+        evaluate_credit_stress, evaluate_cross_asset_stress, evaluate_crypto_structural_risk,
+        build_liquidity_calendar, synthesize_macro_regime, get_cme_front_month_expiry
+    )
+except ImportError:
+    from risk_engine import (
+        evaluate_funding_stress, evaluate_move_volatility, evaluate_rates_and_breakeven,
+        evaluate_credit_stress, evaluate_cross_asset_stress, evaluate_crypto_structural_risk,
+        build_liquidity_calendar, synthesize_macro_regime, get_cme_front_month_expiry
+    )
 
 try:
     from curl_cffi import requests as cffi_requests
@@ -27,12 +44,14 @@ DEFAULT_HEADERS = {
 def get_fred_series_all(prev_data=None):
     """
     Fetches all required FRED series sequentially using a shared session.
-    Includes target rate upper/lower limits (DFEDTARU, DFEDTARL) and daily effective rate (DFF).
+    Includes target rate upper/lower limits (DFEDTARU, DFEDTARL), daily effective rate (DFF),
+    and money market & inflation series: SOFR, IORB, EFFR, T10YIE, BAMLC0A0CM.
     """
     series_ids = [
         "DGS10", "DGS2", "DFII10", "WALCL", "WDTGAL", "RRPONTSYD", "WRBWFRBL", "BAMLH0A0HYM2", 
         "DFEDTARU", "DFEDTARL", "DFF", "FEDFUNDS",
-        "DGS1MO", "DGS3MO", "DGS6MO", "DGS1"
+        "DGS1MO", "DGS3MO", "DGS6MO", "DGS1",
+        "SOFR", "IORB", "EFFR", "T10YIE", "BAMLC0A0CM"
     ]
     results = {}
     start_date = (datetime.now(timezone.utc) - timedelta(days=450)).strftime("%Y-%m-%d")
@@ -218,9 +237,20 @@ def fetch_single_ticker(key, primary_symbol, fallback_symbol, provider_name, ven
             
             curr = closes[-1]
             c1d = round(((curr - closes[-2]) / closes[-2]) * 100, 2) if len(closes) > 1 else 0.0
+            c5d = round(((curr - closes[-6]) / closes[-6]) * 100, 2) if len(closes) > 5 else 0.0
             c7d = round(((curr - closes[-8]) / closes[-8]) * 100, 2) if len(closes) > 7 else 0.0
+            c20d = round(((curr - closes[-21]) / closes[-21]) * 100, 2) if len(closes) > 20 else 0.0
             c30d = round(((curr - closes[-31]) / closes[-31]) * 100, 2) if len(closes) > 30 else 0.0
+            diff_1d = round(curr - closes[-2], 2) if len(closes) > 1 else 0.0
+            diff_5d = round(curr - closes[-6], 2) if len(closes) > 5 else 0.0
+            diff_20d = round(curr - closes[-21], 2) if len(closes) > 20 else 0.0
             p1y = calc_percentile(closes, curr)
+
+            w_closes = closes[-252:]
+            mean_c = sum(w_closes) / len(w_closes)
+            var_c = sum((x - mean_c) ** 2 for x in w_closes) / (len(w_closes) - 1 if len(w_closes) > 1 else 1)
+            std_c = (var_c ** 0.5)
+            zscore_1y = round((curr - mean_c) / std_c, 2) if std_c > 1e-5 else 0.0
             
             return key, {
                 "symbol": sym,
@@ -228,9 +258,15 @@ def fetch_single_ticker(key, primary_symbol, fallback_symbol, provider_name, ven
                 "venue": venue_name,
                 "current": curr,
                 "change_1d": c1d,
+                "change_5d": c5d,
                 "change_7d": c7d,
+                "change_20d": c20d,
                 "change_30d": c30d,
+                "diff_1d": diff_1d,
+                "diff_5d": diff_5d,
+                "diff_20d": diff_20d,
                 "percentile_1y": p1y,
+                "zscore": zscore_1y,
                 "updated": dates[-1],
                 "frequency": "Daily",
                 "source": f"{provider_name} ({sym})",
@@ -257,9 +293,15 @@ def fetch_single_ticker(key, primary_symbol, fallback_symbol, provider_name, ven
         "venue": venue_name,
         "current": None,
         "change_1d": None,
+        "change_5d": None,
         "change_7d": None,
+        "change_20d": None,
         "change_30d": None,
+        "diff_1d": None,
+        "diff_5d": None,
+        "diff_20d": None,
         "percentile_1y": None,
+        "zscore": None,
         "updated": None,
         "frequency": "Daily",
         "source": f"{provider_name} ({primary_symbol})",
@@ -275,7 +317,10 @@ def get_market_assets(prev_data=None):
         "NASDAQ": ("^NDX", "^IXIC", "Nasdaq / Yahoo", "Nasdaq 100 Index"),
         "VIX": ("^VIX", None, "CBOE / Yahoo", "CBOE Volatility Index"),
         "GOLD": ("GC=F", None, "COMEX / Yahoo", "COMEX Gold Futures"),
-        "CRUDE_OIL": ("CL=F", None, "NYMEX / Yahoo", "NYMEX WTI Crude Futures")
+        "CRUDE_OIL": ("CL=F", None, "NYMEX / Yahoo", "NYMEX WTI Crude Futures"),
+        "MOVE": ("^MOVE", None, "ICE / Yahoo", "Treasury Volatility Index"),
+        "USDJPY": ("JPY=X", None, "Forex / Yahoo", "USD/JPY Currency Pair"),
+        "BTC_FUTURES": ("BTC=F", None, "CME / Yahoo", "CME Bitcoin Futures Front Month")
     }
     results = {}
     for k, (pri, fb, prov, ven) in ticker_configs.items():
@@ -608,6 +653,27 @@ def get_crypto_leverage(prev_data=None):
                 }
         except Exception as e:
             print(f"Error fetching CoinGlass liquidations: {e}")
+
+    # 4. Binance BTC Spot 24H Volume (Quote USD & BTC)
+    try:
+        res_v = requests.get("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", headers=DEFAULT_HEADERS, timeout=8)
+        if res_v.status_code == 200:
+            vd = res_v.json()
+            q_vol = round(float(vd.get("quoteVolume", 0.0)) / 1e9, 3)
+            b_vol = round(float(vd.get("volume", 0.0)), 1)
+            leverage["spot_volume_24h"] = {
+                "volume_usd_bil": q_vol,
+                "volume_btc": b_vol,
+                "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                "source": "Binance Spot (BTCUSDT)",
+                "frequency": "24H Rolling",
+                "status": "ok"
+            }
+        else:
+            leverage["spot_volume_24h"] = {"volume_usd_bil": None, "volume_btc": None, "source": "Binance Spot", "status": "unavailable"}
+    except Exception as e:
+        print(f"Error fetching Binance spot volume: {e}")
+        leverage["spot_volume_24h"] = {"volume_usd_bil": None, "volume_btc": None, "source": "Binance Spot", "status": "unavailable"}
 
     return leverage
 
@@ -971,6 +1037,11 @@ def main():
     rrp_obs = fred_data.get("RRPONTSYD", [])
     reserves_obs = fred_data.get("WRBWFRBL", [])
     hy_obs = fred_data.get("BAMLH0A0HYM2", [])
+    ig_obs = fred_data.get("BAMLC0A0CM", [])
+    sofr_obs = fred_data.get("SOFR", [])
+    iorb_obs = fred_data.get("IORB", [])
+    effr_obs = fred_data.get("EFFR", [])
+    t10yie_obs = fred_data.get("T10YIE", [])
     
     # Official Fed Funds target range & effective rates
     dfedtaru_obs = fred_data.get("DFEDTARU", [])
@@ -1160,22 +1231,44 @@ def main():
                 "history": liq_history[-52:]
             }
 
-    # 10. Process High Yield Credit Spread (BAMLH0A0HYM2)
+    # 10. Process High Yield Credit Spread (BAMLH0A0HYM2) & IG Spread (BAMLC0A0CM)
+    credit_result = evaluate_credit_stress(hy_obs, ig_obs)
     hy_spread = None
     if hy_obs:
         hy_curr, hy_pct, hy_diff = calc_changes(hy_obs)
-        c1w_bp = round(hy_diff.get(5, 0) * 100, 1) if hy_diff.get(5) is not None else None
-        c1m_bp = round(hy_diff.get(22, 0) * 100, 1) if hy_diff.get(22) is not None else None
+        c1d_bp = round(hy_diff.get(1, 0) * 100, 1) if hy_diff.get(1) is not None else None
+        c5d_bp = round(hy_diff.get(5, 0) * 100, 1) if hy_diff.get(5) is not None else None
+        c20d_bp = round(hy_diff.get(20, 0) * 100, 1) if hy_diff.get(20) is not None else None
         hy_spread = {
             "current": hy_curr,
-            "change_1w_bp": c1w_bp,
-            "change_1m_bp": c1m_bp,
-            "percentile_1y": calc_percentile([o["value"] for o in hy_obs[-260:]], hy_curr),
+            "change_1d_bp": c1d_bp,
+            "change_5d_bp": c5d_bp,
+            "change_20d_bp": c20d_bp,
+            "change_1w_bp": c5d_bp,
+            "change_1m_bp": c20d_bp,
+            "percentile_1y": credit_result.get("percentile"),
+            "zscore": credit_result.get("zscore"),
+            "status": credit_result.get("status", "ok"),
             "updated": hy_obs[-1]["date"],
             "frequency": "Daily",
             "source": "ICE BofA / FRED (BAMLH0A0HYM2)",
-            "status": "ok",
             "history": hy_obs[-90:]
+        }
+
+    ig_spread = None
+    if ig_obs:
+        ig_curr, ig_pct, ig_diff = calc_changes(ig_obs)
+        ig_spread = {
+            "current": ig_curr,
+            "change_1d_bp": round(ig_diff.get(1, 0) * 100, 1) if ig_diff.get(1) is not None else None,
+            "change_5d_bp": round(ig_diff.get(5, 0) * 100, 1) if ig_diff.get(5) is not None else None,
+            "change_20d_bp": round(ig_diff.get(20, 0) * 100, 1) if ig_diff.get(20) is not None else None,
+            "percentile_1y": calc_percentile([o["value"] for o in ig_obs[-260:]], ig_curr),
+            "updated": ig_obs[-1]["date"],
+            "frequency": "Daily",
+            "source": "ICE BofA / FRED (BAMLC0A0CM)",
+            "status": "ok",
+            "history": ig_obs[-90:]
         }
 
     # 11. P0 FIX: Rigorous Federal Funds Rate (Target Range vs Effective Rate)
@@ -1214,7 +1307,6 @@ def main():
             "history": [{"date": o["date"], "value": o["value"]} for o in dfedtaru_obs[-60:]]
         }
     elif fedfunds_obs:
-        # Fallback if target range series fail
         fed_funds = {
             "target_upper": None,
             "target_lower": None,
@@ -1240,7 +1332,7 @@ def main():
 
     rate_path = {
         "title": "US Treasury Short-End Bill Curve",
-        "description": "Yields across 1M, 3M, 6M, 12M Treasury bills. Driven by bill supply, money-market demand, and Fed rate expectations (not direct futures probabilities).",
+        "description": "Yields across 1M, 3M, 6M, 12M Treasury bills. Driven by bill supply, money-market demand, and Fed rate expectations.",
         "m1": dgs1mo_obs[-1]["value"] if dgs1mo_obs else None,
         "m3": dgs3mo_obs[-1]["value"] if dgs3mo_obs else None,
         "m6": dgs6mo_obs[-1]["value"] if dgs6mo_obs else None,
@@ -1251,7 +1343,120 @@ def main():
         "status": "ok" if dgs1mo_obs else "unavailable"
     }
 
-    # 13. P1 UPGRADE: Multi-dimensional Macro Regime Engine
+    # 13. P0: 10Y Breakeven Inflation & Rates Regime
+    rates_result = evaluate_rates_and_breakeven(us10y_obs, dfii10_obs, t10yie_obs)
+    us10y_breakeven = None
+    if t10yie_obs:
+        be_curr, be_pct, be_diff = calc_changes(t10yie_obs)
+        us10y_breakeven = {
+            "current": be_curr,
+            "change_1d_bp": round(be_diff.get(1, 0) * 100, 1) if be_diff.get(1) is not None else None,
+            "change_5d_bp": round(be_diff.get(5, 0) * 100, 1) if be_diff.get(5) is not None else None,
+            "change_20d_bp": round(be_diff.get(20, 0) * 100, 1) if be_diff.get(20) is not None else None,
+            "percentile_1y": calc_percentile([o["value"] for o in t10yie_obs[-260:]], be_curr),
+            "updated": t10yie_obs[-1]["date"],
+            "frequency": "Daily",
+            "source": "FRED (10Y Breakeven T10YIE)",
+            "status": "ok",
+            "history": t10yie_obs[-90:]
+        }
+    elif rates_result.get("breakeven_10y") is not None:
+        us10y_breakeven = {
+            "current": rates_result.get("breakeven_10y"),
+            "change_1d_bp": rates_result.get("breakeven_change_1d_bp"),
+            "change_5d_bp": rates_result.get("breakeven_change_5d_bp"),
+            "change_20d_bp": rates_result.get("breakeven_change_20d_bp"),
+            "percentile_1y": None,
+            "updated": us10y.get("updated"),
+            "frequency": "Daily",
+            "source": "Derived (Nominal 10Y - TIPS Real 10Y)",
+            "status": "ok",
+            "history": []
+        }
+
+    # 14. P0: Funding Stress (SOFR, IORB, EFFR, Spreads, Percentiles, Z-Scores)
+    funding_result = evaluate_funding_stress(sofr_obs, iorb_obs, effr_obs, dfedtaru_obs)
+    sofr_data = {
+        "sofr": funding_result.get("sofr"),
+        "iorb": funding_result.get("iorb"),
+        "effr": funding_result.get("effr"),
+        "sofr_iorb_spread_bp": funding_result.get("sofr_iorb_spread_bp"),
+        "sofr_effr_spread_bp": funding_result.get("sofr_effr_spread_bp"),
+        "change_1d_bp": funding_result.get("sofr_change_1d_bp"),
+        "spread_change_5d_bp": funding_result.get("spread_change_5d_bp"),
+        "spread_change_20d_bp": funding_result.get("spread_change_20d_bp"),
+        "percentile_1y": funding_result.get("percentile"),
+        "zscore": funding_result.get("zscore"),
+        "status": funding_result.get("status"),
+        "updated": sofr_obs[-1]["date"] if sofr_obs else None,
+        "frequency": "Daily",
+        "source": "NY Fed / Federal Reserve / FRED",
+        "history": funding_result.get("history", [])
+    }
+
+    # 15. P0: MOVE Bond Volatility Evaluation
+    move_result = evaluate_move_volatility(market.get("MOVE"))
+
+    # 16. P1: Cross-Asset Stress Engine & Liquidity Liquidation Detection
+    cross_asset_result = evaluate_cross_asset_stress(market, move_result, credit_result, rates_result)
+
+    # 17. P1: CME BTC Futures Basis
+    btc_futures_data = market.get("BTC_FUTURES")
+    cme_basis_data = {
+        "futures_price": None,
+        "spot_price": None,
+        "basis_usd": None,
+        "annualized_pct": None,
+        "days_to_expiry": None,
+        "expiry_date": None,
+        "is_compressed": False,
+        "source": "CME Futures (BTC=F) vs Spot (BTC-USD)",
+        "frequency": "Daily",
+        "status": "unavailable"
+    }
+    btc_spot_curr = btc_data.get("current") if btc_data else None
+    btc_fut_curr = btc_futures_data.get("current") if btc_futures_data else None
+    if btc_spot_curr and btc_fut_curr:
+        exp_date, days_exp = get_cme_front_month_expiry()
+        basis_usd = round(btc_fut_curr - btc_spot_curr, 2)
+        ann_pct = round((basis_usd / btc_spot_curr) * (365.0 / days_exp) * 100.0, 2)
+        cme_basis_data = {
+            "futures_price": btc_fut_curr,
+            "spot_price": btc_spot_curr,
+            "basis_usd": basis_usd,
+            "annualized_pct": ann_pct,
+            "days_to_expiry": days_exp,
+            "expiry_date": exp_date,
+            "is_compressed": ann_pct < 4.0,
+            "source": "CME Futures (BTC=F) vs Spot (BTC-USD)",
+            "frequency": "Daily",
+            "status": "ok",
+            "updated": btc_futures_data.get("updated")
+        }
+
+    # 18. P1: Crypto Structural Risk (ETF Flows, CME Basis, OI/Spot Volume, Leverage Fragility)
+    crypto_structural_result = evaluate_crypto_structural_risk(
+        etf_flows=etf_flows,
+        cme_basis_data=cme_basis_data,
+        crypto_leverage=crypto_leverage,
+        stablecoins=stablecoins,
+        btc_spot_vol=crypto_leverage.get("spot_volume_24h")
+    )
+
+    # 19. P2: Overall Macro Risk Regime & Explanation Engine
+    macro_risk_regime = synthesize_macro_regime(
+        funding_res=funding_result,
+        rates_res=rates_result,
+        credit_res=credit_result,
+        cross_asset_res=cross_asset_result,
+        crypto_res=crypto_structural_result,
+        liquidity_res=us_liquidity_proxy
+    )
+
+    # 20. P1: Next Liquidity Risk Window (Calendar)
+    liquidity_calendar = build_liquidity_calendar()
+
+    # Legacy Backward-Compatible Macro Regime Engine
     macro_regime = build_macro_regime(
         dxy_data=dxy_data,
         us10y_real=us10y_real,
@@ -1263,7 +1468,7 @@ def main():
         crypto_leverage=crypto_leverage
     )
 
-    # 14. P1 UPGRADE: Rigorous Divergence Analysis with Real Rolling Pearson Correlations
+    # Rigorous Divergence Analysis with Real Rolling Pearson Correlations
     divergence_data = detect_market_divergence(
         regime=macro_regime,
         btc_data=btc_data,
@@ -1276,29 +1481,36 @@ def main():
         hy_spread=hy_spread
     )
 
-    # 15. P0 FIX: Real Data Quality Tracker (Eliminates fake "100% Live Sync")
+    # Tracked Data Quality Metrics Audit
     tracked_metrics = [
         {"name": "Bitcoin (BTC)", "category": "Crypto Spot", "status": btc_data.get("status"), "source": btc_data.get("source"), "updated": btc_data.get("updated"), "frequency": "Daily"},
         {"name": "US Dollar Index (DXY)", "category": "Currency", "status": dxy_data.get("status"), "source": dxy_data.get("source"), "updated": dxy_data.get("updated"), "frequency": "Daily"},
+        {"name": "USD/JPY Currency Pair", "category": "Currency", "status": market.get("USDJPY", {}).get("status"), "source": "Forex / Yahoo", "updated": market.get("USDJPY", {}).get("updated"), "frequency": "Daily"},
         {"name": "S&P 500 (SPX)", "category": "Equities", "status": spx_data.get("status"), "source": spx_data.get("source"), "updated": spx_data.get("updated"), "frequency": "Daily"},
         {"name": "Nasdaq 100 (NDX)", "category": "Equities", "status": nasdaq_data.get("status"), "source": nasdaq_data.get("source"), "updated": nasdaq_data.get("updated"), "frequency": "Daily"},
         {"name": "VIX Volatility", "category": "Volatility", "status": vix_data.get("status"), "source": vix_data.get("source"), "updated": vix_data.get("updated"), "frequency": "Daily"},
+        {"name": "MOVE Bond Volatility", "category": "Volatility", "status": market.get("MOVE", {}).get("status"), "source": "ICE / Yahoo", "updated": market.get("MOVE", {}).get("updated"), "frequency": "Daily"},
         {"name": "COMEX Gold", "category": "Commodities", "status": gold_data.get("status"), "source": gold_data.get("source"), "updated": gold_data.get("updated"), "frequency": "Daily"},
         {"name": "NYMEX Crude Oil", "category": "Commodities", "status": oil_data.get("status"), "source": oil_data.get("source"), "updated": oil_data.get("updated"), "frequency": "Daily"},
         {"name": "US 10Y Yield", "category": "Rates", "status": us10y.get("status"), "source": us10y.get("source"), "updated": us10y.get("updated"), "frequency": "Daily"},
         {"name": "US 2Y Yield", "category": "Rates", "status": us2y.get("status"), "source": us2y.get("source"), "updated": us2y.get("updated"), "frequency": "Daily"},
         {"name": "10Y Real Yield (TIPS)", "category": "Rates", "status": us10y_real.get("status"), "source": us10y_real.get("source"), "updated": us10y_real.get("updated"), "frequency": "Daily"},
+        {"name": "10Y Breakeven Inflation", "category": "Rates", "status": us10y_breakeven.get("status") if us10y_breakeven else "unavailable", "source": "FRED", "updated": us10y_breakeven.get("updated") if us10y_breakeven else None, "frequency": "Daily"},
         {"name": "10Y-2Y Yield Spread", "category": "Rates", "status": spread_10y_2y.get("status"), "source": spread_10y_2y.get("source"), "updated": spread_10y_2y.get("updated"), "frequency": "Daily"},
+        {"name": "SOFR Overnight Rate", "category": "Funding Stress", "status": sofr_data.get("status"), "source": "NY Fed", "updated": sofr_data.get("updated"), "frequency": "Daily"},
         {"name": "Fed Target Range (DFEDTARU/L)", "category": "Policy", "status": fed_funds.get("status") if fed_funds else "unavailable", "source": "FRED", "updated": fed_funds.get("target_updated") if fed_funds else None, "frequency": "Daily"},
         {"name": "Effective Fed Funds Rate (DFF)", "category": "Policy", "status": "ok" if fed_funds and fed_funds.get("effective_rate") else "unavailable", "source": "FRED", "updated": fed_funds.get("effective_updated") if fed_funds else None, "frequency": "Daily"},
         {"name": "Treasury Bill Curve", "category": "Rates", "status": rate_path.get("status"), "source": "FRED", "updated": rate_path.get("updated"), "frequency": "Daily"},
         {"name": "HY Credit Spread (OAS)", "category": "Credit", "status": hy_spread.get("status") if hy_spread else "unavailable", "source": "FRED", "updated": hy_spread.get("updated") if hy_spread else None, "frequency": "Daily"},
+        {"name": "IG Credit Spread (OAS)", "category": "Credit", "status": ig_spread.get("status") if ig_spread else "unavailable", "source": "FRED", "updated": ig_spread.get("updated") if ig_spread else None, "frequency": "Daily"},
         {"name": "Fed Balance Sheet (WALCL)", "category": "Liquidity", "status": fed_bs.get("status") if fed_bs else "unavailable", "source": "Federal Reserve", "updated": fed_bs.get("updated") if fed_bs else None, "frequency": "Weekly"},
         {"name": "Treasury General Account (TGA)", "category": "Liquidity", "status": tga.get("status") if tga else "unavailable", "source": "U.S. Treasury", "updated": tga.get("updated") if tga else None, "frequency": "Weekly"},
         {"name": "Reverse Repo (RRP)", "category": "Liquidity", "status": rrp.get("status") if rrp else "unavailable", "source": "NY Fed", "updated": rrp.get("updated") if rrp else None, "frequency": "Daily"},
         {"name": "Bank Reserves", "category": "Liquidity", "status": bank_reserves.get("status") if bank_reserves else "unavailable", "source": "Federal Reserve", "updated": bank_reserves.get("updated") if bank_reserves else None, "frequency": "Weekly"},
         {"name": "US Net Liquidity Proxy", "category": "Liquidity", "status": us_liquidity_proxy.get("status") if us_liquidity_proxy else "unavailable", "source": "Derived", "updated": us_liquidity_proxy.get("updated") if us_liquidity_proxy else None, "frequency": "Weekly"},
         {"name": "BTC Spot ETF Net Flow", "category": "Crypto Capital Flow", "status": etf_flows.get("status") if etf_flows else "unavailable", "source": "Farside Investors", "updated": etf_flows.get("updated") if etf_flows else None, "frequency": "Daily"},
+        {"name": "CME BTC Basis", "category": "Crypto Leverage", "status": cme_basis_data.get("status"), "source": "CME / Yahoo", "updated": cme_basis_data.get("updated"), "frequency": "Daily"},
+        {"name": "Binance BTC Spot 24H Vol", "category": "Crypto Capital Flow", "status": crypto_leverage.get("spot_volume_24h", {}).get("status", "unavailable"), "source": "Binance Spot", "updated": crypto_leverage.get("spot_volume_24h", {}).get("updated"), "frequency": "24H"},
         {"name": "Stablecoin Market Cap", "category": "Crypto Capital Flow", "status": stablecoins.get("status") if stablecoins else "unavailable", "source": "DefiLlama", "updated": stablecoins.get("updated") if stablecoins else None, "frequency": "Daily"},
         {"name": "Binance BTC Funding Rate", "category": "Crypto Leverage", "status": crypto_leverage.get("funding_rate", {}).get("status", "unavailable") if crypto_leverage.get("funding_rate") else "unavailable", "source": "Binance Futures", "updated": crypto_leverage.get("funding_rate", {}).get("updated") if crypto_leverage.get("funding_rate") else None, "frequency": "8-Hour"},
         {"name": "Binance BTC Open Interest", "category": "Crypto Leverage", "status": crypto_leverage.get("open_interest", {}).get("status", "unavailable") if crypto_leverage.get("open_interest") else "unavailable", "source": "Binance Futures", "updated": crypto_leverage.get("open_interest", {}).get("updated") if crypto_leverage.get("open_interest") else None, "frequency": "Daily"},
@@ -1311,6 +1523,8 @@ def main():
     output = {
         "updated_at": now_utc.isoformat(),
         "data_quality": data_quality,
+        "risk_engine": macro_risk_regime,
+        "liquidity_calendar": liquidity_calendar,
         "macro_regime": macro_regime,
         "market_divergence": divergence_data.get("cases", []),
         "rolling_correlations": divergence_data.get("correlations", {}),
@@ -1324,15 +1538,22 @@ def main():
             "spx": spx_data,
             "nasdaq": nasdaq_data,
             "vix": vix_data,
-            "hy_spread": hy_spread
+            "move": market.get("MOVE"),
+            "usdjpy": market.get("USDJPY"),
+            "hy_spread": hy_spread,
+            "ig_spread": ig_spread
         },
         "rates": {
             "us10y": us10y,
             "us2y": us2y,
             "us10y_real": us10y_real,
+            "us10y_breakeven": us10y_breakeven,
             "spread_10y_2y": spread_10y_2y,
             "fed_funds": fed_funds,
-            "rate_path": rate_path
+            "rate_path": rate_path,
+            "sofr": sofr_data,
+            "funding_stress": funding_result,
+            "rates_regime": rates_result
         },
         "us_liquidity": {
             "fed_balance_sheet": fed_bs,
@@ -1344,9 +1565,18 @@ def main():
         "crypto_capital_flow": {
             "stablecoins": stablecoins,
             "btc_etf_flow": etf_flows,
-            "btc_exchange_netflow": crypto_leverage.get("exchange_netflow")
+            "btc_exchange_netflow": crypto_leverage.get("exchange_netflow"),
+            "cme_basis": cme_basis_data
         },
-        "crypto_leverage": crypto_leverage,
+        "crypto_leverage": {
+            "funding_rate": crypto_leverage.get("funding_rate"),
+            "open_interest": crypto_leverage.get("open_interest"),
+            "liquidations": crypto_leverage.get("liquidations"),
+            "exchange_netflow": crypto_leverage.get("exchange_netflow"),
+            "spot_volume_24h": crypto_leverage.get("spot_volume_24h"),
+            "oi_spot_ratio": crypto_structural_result.get("oi_spot_ratio"),
+            "structural_risk": crypto_structural_result
+        },
         "commodities": {
             "gold": gold_data,
             "crude_oil": oil_data
@@ -1358,6 +1588,8 @@ def main():
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(f"Success: public/data.json generated. Quality: {data_quality['summary']}.")
+    print(f"Macro Risk Regime: {macro_risk_regime['overall_regime']} ({macro_risk_regime['risk_level']})")
 
 if __name__ == "__main__":
     main()
+
